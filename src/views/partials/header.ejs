@@ -4,22 +4,29 @@
   <title>MozaicHub</title>
   <link rel="stylesheet" href="/public/css/style.css" />
 </head>
-<body>
+<body class="theme-dark">
 <nav class="topnav">
-  <div class="logo">MozaicHub</div>
+  <div class="logo"><a href="/">MozaicHub</a></div>
   <div class="links">
     <a href="/">Dashboard</a>
     <a href="/files">Browse</a>
     <a href="/files/mine">My Files</a>
     <a href="/friends">Friends</a>
     <a href="/messages">Messages</a>
-    <a href="/account">Account</a>
     <% if (user && user.role === 'ADMIN') { %>
       <a href="/admin">Admin</a>
     <% } %>
+    <button class="ghost" id="themeToggle" type="button">Toggle Theme</button>
     <form action="/logout" method="post" class="inline">
       <button type="submit">Logout</button>
     </form>
+    <a href="/account" class="avatar-link">
+      <% if (user && user.profileImagePath) { %>
+        <img class="avatar-sm" src="/uploads/<%= user.profileImagePath %>" alt="Account" />
+      <% } else { %>
+        <div class="avatar-sm placeholder">You</div>
+      <% } %>
+    </a>
   </div>
 </nav>
 <div class="container">

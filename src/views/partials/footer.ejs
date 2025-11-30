@@ -1,3 +1,14 @@
+<script>
+  const body = document.body;
+  const toggle = document.getElementById('themeToggle');
+  const stored = localStorage.getItem('theme');
+  if (stored === 'light') { body.classList.remove('theme-dark'); body.classList.add('theme-light'); }
+  toggle?.addEventListener('click', () => {
+    const isDark = body.classList.toggle('theme-dark');
+    if (!isDark) { body.classList.add('theme-light'); localStorage.setItem('theme', 'light'); }
+    else { body.classList.remove('theme-light'); localStorage.setItem('theme', 'dark'); }
+  });
+</script>
 </div>
 </body>
 </html>

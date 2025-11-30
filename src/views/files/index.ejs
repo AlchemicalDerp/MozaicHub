@@ -7,8 +7,16 @@
 <ul class="card-list">
   <% files.forEach(file => { %>
     <li class="card">
-      <a href="/files/<%= file.id %>"><%= file.title %></a>
-      <div class="meta">By <%= file.owner.displayName %> • <%= file.visibility %></div>
+      <div class="avatar-row">
+        <% if (file.owner.profileImagePath) { %>
+          <img class="avatar-sm" src="/uploads/<%= file.owner.profileImagePath %>" alt="<%= file.owner.displayName %>" />
+        <% } else { %>
+          <div class="avatar-sm placeholder">MH</div>
+        <% } %>
+        <span class="muted">by <%= file.owner.displayName %></span>
+      </div>
+      <a class="title" href="/files/<%= file.id %>"><%= file.title %></a>
+      <div class="meta"><%= file.visibility %> • <%= file.fileCategory %></div>
     </li>
   <% }) %>
 </ul>

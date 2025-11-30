@@ -32,15 +32,25 @@ router.post('/users', async (req, res) => {
 
 router.get('/users/:id', async (req, res) => {
   const user = await User.findByPk(req.params.id);
-  res.render('admin/userDetail', { user });
+  res.render('admin/userDetail', { user, currentUser: req.session.user });
 });
 
 router.patch('/users/:id', async (req, res) => {
-  const { username, email, displayName, role, storageQuotaBytes } = req.body;
+  const { username, email, displayName, role, storageQuotaValue, storageQuotaUnit } = req.body;
   const gray = await Graylist.findOne({ where: { [Op.or]: [{ username }, { email }] } });
   if (gray) req.session.grayWarning = true;
+  const updatingSelf = Number(req.params.id) === req.session.user.id && req.session.user.role === 'ADMIN';
+  const quotaBytes = storageQuotaValue
+    ? Number(storageQuotaValue) * (storageQuotaUnit === 'MB' ? 1024 * 1024 : 1024 * 1024 * 1024)
+    : undefined;
   await User.update(
-    { username, email, displayName, role, storageQuotaBytes: storageQuotaBytes ? Number(storageQuotaBytes) : undefined },
+    {
+      username,
+      email,
+      displayName,
+      role: updatingSelf ? req.session.user.role : role,
+      storageQuotaBytes: quotaBytes,
+    },
     { where: { id: req.params.id } }
   );
   res.redirect(`/admin/users/${req.params.id}`);

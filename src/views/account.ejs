@@ -1,5 +1,26 @@
 <%- include('partials/header') %>
 <h2>Account</h2>
+<section class="profile-header">
+  <div class="avatar-stack">
+    <% if (user.profileImagePath) { %>
+      <img class="avatar-lg" src="/uploads/<%= user.profileImagePath %>" alt="Profile image" />
+    <% } else { %>
+      <div class="avatar-lg placeholder">MH</div>
+    <% } %>
+    <form class="inline-upload" method="post" action="/account/avatar" enctype="multipart/form-data">
+      <label class="button secondary">
+        Upload Avatar
+        <input type="file" name="profileImage" accept="image/*" hidden />
+      </label>
+      <button type="submit">Save Avatar</button>
+    </form>
+  </div>
+  <div class="profile-meta">
+    <p class="muted">Logged in as</p>
+    <h3><%= user.displayName %> (@<%= user.username %>)</h3>
+    <p><%= user.email %></p>
+  </div>
+</section>
 <section class="form-card">
   <h3>Profile</h3>
   <form method="post" action="/account/profile">
@@ -22,6 +43,9 @@
 </section>
 <section class="form-card">
   <h3>Storage</h3>
+  <div class="storage-bar">
+    <div class="storage-used" style="width: <%= Math.min(100, (Number(user.storageUsedBytes)/Number(user.storageQuotaBytes))*100) %>%"></div>
+  </div>
   <p><%= (Number(user.storageUsedBytes)/1024/1024/1024).toFixed(2) %> GB / <%= (Number(user.storageQuotaBytes)/1024/1024/1024).toFixed(2) %> GB used</p>
 </section>
 <section>

@@ -22,6 +22,7 @@ router.post('/login', async (req, res) => {
     displayName: user.displayName,
     role: user.role,
     email: user.email,
+    profileImagePath: user.profileImagePath,
   };
   return res.redirect('/');
 });

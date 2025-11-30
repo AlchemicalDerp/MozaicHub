@@ -74,7 +74,9 @@ router.get('/:id', async (req, res) => {
   if (!file) return res.status(404).render('404');
   const canView = file.visibility === 'public' || file.ownerUserId === req.session.user.id || req.session.user.role === 'ADMIN';
   if (!canView) return res.status(403).send('Forbidden');
-  res.render('files/detail', { file });
+  const commentError = req.session.commentError;
+  req.session.commentError = null;
+  res.render('files/detail', { file, commentError });
 });
 
 router.get('/:id/download', async (req, res) => {

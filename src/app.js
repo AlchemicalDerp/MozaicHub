@@ -14,7 +14,7 @@ const adminRoutes = require('./routes/admin');
 const commentRoutes = require('./routes/comments');
 const friendRoutes = require('./routes/friends');
 const messageRoutes = require('./routes/messages');
-const { removeFile } = require('./storage/localStorage');
+const { removeFile, profileUpload } = require('./storage/localStorage');
 
 const app = express();
 
@@ -47,8 +47,27 @@ app.use('/', authRoutes);
 app.use(ensureAuth);
 
 app.get('/', async (req, res) => {
-  const popular = await File.findAll({ limit: 5, order: [['createdAt', 'DESC']], include: 'owner' });
-  res.render('dashboard', { popular });
+  const visibleWhere = {
+    [Op.or]: [
+      { visibility: 'public' },
+      { visibility: 'unlisted' },
+      { ownerUserId: req.session.user.id },
+    ],
+  };
+  const popular = await File.findAll({ limit: 6, order: [['createdAt', 'DESC']], include: 'owner', where: visibleWhere });
+  const imagesAndVideos = await File.findAll({
+    limit: 8,
+    order: [['createdAt', 'DESC']],
+    where: { ...visibleWhere, fileCategory: { [Op.in]: ['image', 'video'] } },
+    include: 'owner',
+  });
+  const otherFiles = await File.findAll({
+    limit: 8,
+    order: [['createdAt', 'DESC']],
+    where: { ...visibleWhere, fileCategory: { [Op.notIn]: ['image', 'video'] } },
+    include: 'owner',
+  });
+  res.render('dashboard', { popular, imagesAndVideos, otherFiles });
 });
 
 app.use('/files', fileRoutes);
@@ -70,8 +89,25 @@ app.post('/account/profile', async (req, res) => {
   }
   await User.update({ displayName, username, email }, { where: { id: req.session.user.id } });
   const updated = await User.findByPk(req.session.user.id);
-  req.session.user = { ...req.session.user, displayName: updated.displayName, username: updated.username, email: updated.email };
+  req.session.user = {
+    ...req.session.user,
+    displayName: updated.displayName,
+    username: updated.username,
+    email: updated.email,
+    profileImagePath: updated.profileImagePath,
+  };
   res.redirect('/account');
+});
+
+app.post('/account/avatar', (req, res, next) => {
+  profileUpload.single('profileImage')(req, res, async (err) => {
+    if (err) return next(err);
+    if (!req.file) return res.redirect('/account');
+    const relativePath = path.join('profiles', req.file.filename);
+    await User.update({ profileImagePath: relativePath }, { where: { id: req.session.user.id } });
+    req.session.user = { ...req.session.user, profileImagePath: relativePath };
+    res.redirect('/account');
+  });
 });
 
 app.post('/account/password', async (req, res) => {
