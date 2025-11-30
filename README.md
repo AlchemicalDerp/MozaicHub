@@ -13,10 +13,11 @@ MozaicHub is a simple full-stack file hosting and media server built with Node.j
 - Scheduled cleanup for banned users' files after a grace period.
 
 ## Setup
-1. Install dependencies:
+1. Install dependencies (required any time you freshly clone or pull new packages):
    ```bash
    npm install
    ```
+   > If you see an error like `Cannot find module 'marked'`, it means dependencies have not been installed yet. Run `npm install` first to pull everything into `node_modules/`.
 2. Configure environment variables (optional):
    - Copy `.env.example` to `.env` and adjust values for `PORT`, `SESSION_SECRET`, `DATABASE_URL`, `UPLOADS_DIR`, `PROFILE_DIR`, `MAX_UPLOAD_SIZE`, and other runtime settings.
 3. Start the server:
