@@ -194,7 +194,16 @@ async function ensureFirstAdmin() {
 }
 
 async function start() {
+  const usesSqlite = config.databaseUrl.startsWith('sqlite:');
+  if (usesSqlite) {
+    await sequelize.query('PRAGMA foreign_keys = OFF');
+  }
+
   await sequelize.sync({ alter: true });
+
+  if (usesSqlite) {
+    await sequelize.query('PRAGMA foreign_keys = ON');
+  }
   await ensureFirstAdmin();
   app.listen(config.port, () => console.log(`Server running on port ${config.port}`));
 }
