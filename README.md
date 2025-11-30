@@ -4,7 +4,7 @@ MozaicHub is a simple full-stack file hosting and media server built with Node.j
 
 ## Features
 - Session-based authentication with bcrypt password hashing.
-- Admin-only account creation, banning with graylist tracking, and quota defaults.
+- Admin-only account creation, banning with graylist tracking, and configurable per-user storage quotas.
 - File uploads with visibility controls (public/unlisted/private) and media preview for audio/video/image/PDF.
 - Commenting on accessible files.
 - Friend requests, blocking, and basic messaging between friends.
@@ -21,7 +21,7 @@ MozaicHub is a simple full-stack file hosting and media server built with Node.j
    - `SESSION_SECRET`
    - `DATABASE_URL` (defaults to local SQLite database)
    - `UPLOADS_DIR` and `PROFILE_DIR`
-   - `MAX_UPLOAD_SIZE`
+   - `MAX_UPLOAD_SIZE` (defaults to 200MB)
 3. Start the server:
    ```bash
    npm start

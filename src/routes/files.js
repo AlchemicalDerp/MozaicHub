@@ -34,30 +34,39 @@ router.get('/upload', (req, res) => {
   res.render('files/upload');
 });
 
-router.post('/', uploadMiddleware.single('file'), async (req, res) => {
-  const userId = req.session.user.id;
-  const { title, description, visibility } = req.body;
-  const file = req.file;
-  if (!file) return res.status(400).send('No file uploaded');
-  const user = await User.findByPk(userId);
-  const newUsage = Number(user.storageUsedBytes) + Number(file.size);
-  if (newUsage > Number(user.storageQuotaBytes)) {
-    return res.status(400).send('Storage quota exceeded');
-  }
-  const category = categorizeFile(file.originalname, file.mimetype);
-  const fileRecord = await File.create({
-    ownerUserId: userId,
-    title,
-    description,
-    originalFilename: file.originalname,
-    storedFilename: file.filename,
-    mimeType: file.mimetype,
-    fileCategory: category,
-    sizeBytes: file.size,
-    visibility: visibility || 'private',
+router.post('/', (req, res, next) => {
+  uploadMiddleware.single('file')(req, res, async (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).send(`File too large. Max size is ${Math.round(config.maxUploadSize / (1024 * 1024))}MB.`);
+      }
+      return next(err);
+    }
+
+    const userId = req.session.user.id;
+    const { title, description, visibility } = req.body;
+    const file = req.file;
+    if (!file) return res.status(400).send('No file uploaded');
+    const user = await User.findByPk(userId);
+    const newUsage = Number(user.storageUsedBytes) + Number(file.size);
+    if (newUsage > Number(user.storageQuotaBytes)) {
+      return res.status(400).send('Storage quota exceeded');
+    }
+    const category = categorizeFile(file.originalname, file.mimetype);
+    const fileRecord = await File.create({
+      ownerUserId: userId,
+      title,
+      description,
+      originalFilename: file.originalname,
+      storedFilename: file.filename,
+      mimeType: file.mimetype,
+      fileCategory: category,
+      sizeBytes: file.size,
+      visibility: visibility || 'private',
+    });
+    await user.update({ storageUsedBytes: newUsage });
+    res.redirect(`/files/${fileRecord.id}`);
   });
-  await user.update({ storageUsedBytes: newUsage });
-  res.redirect(`/files/${fileRecord.id}`);
 });
 
 router.get('/:id', async (req, res) => {

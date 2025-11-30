@@ -23,3 +23,6 @@ body { font-family: Arial, sans-serif; margin: 0; background: #f5f5f5; }
 .chat li { margin-bottom: 6px; }
 .chat .me { color: #0a7; }
 .chat .them { color: #444; }
+.admin-nav { margin: 10px 0; display: flex; gap: 10px; }
+.admin-nav a { background: #444; color: #fff; padding: 6px 10px; border-radius: 4px; text-decoration: none; }
+.admin-nav a:hover { background: #333; }

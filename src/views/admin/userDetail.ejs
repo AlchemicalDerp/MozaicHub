@@ -1,9 +1,23 @@
 <%- include('../partials/header') %>
+<%- include('./partials/nav') %>
 <h2>User Detail</h2>
 <div class="card">
-  <p>Username: <%= user.username %></p>
-  <p>Email: <%= user.email %></p>
-  <p>Role: <%= user.role %></p>
+  <form method="post" action="/admin/users/<%= user.id %>?_method=PATCH" class="form-card">
+    <label>Username</label>
+    <input type="text" name="username" value="<%= user.username %>" required />
+    <label>Email</label>
+    <input type="email" name="email" value="<%= user.email %>" required />
+    <label>Display Name</label>
+    <input type="text" name="displayName" value="<%= user.displayName %>" required />
+    <label>Role</label>
+    <select name="role">
+      <option value="USER" <%= user.role === 'USER' ? 'selected' : '' %>>User</option>
+      <option value="ADMIN" <%= user.role === 'ADMIN' ? 'selected' : '' %>>Admin</option>
+    </select>
+    <label>Storage Quota (bytes)</label>
+    <input type="number" name="storageQuotaBytes" value="<%= user.storageQuotaBytes %>" min="0" />
+    <button type="submit">Save Changes</button>
+  </form>
   <p>Status: <%= user.isBanned ? 'Banned' : 'Active' %></p>
 </div>
 <form method="post" action="/admin/users/<%= user.id %>/ban">

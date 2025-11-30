@@ -35,6 +35,17 @@ router.get('/users/:id', async (req, res) => {
   res.render('admin/userDetail', { user });
 });
 
+router.patch('/users/:id', async (req, res) => {
+  const { username, email, displayName, role, storageQuotaBytes } = req.body;
+  const gray = await Graylist.findOne({ where: { [Op.or]: [{ username }, { email }] } });
+  if (gray) req.session.grayWarning = true;
+  await User.update(
+    { username, email, displayName, role, storageQuotaBytes: storageQuotaBytes ? Number(storageQuotaBytes) : undefined },
+    { where: { id: req.params.id } }
+  );
+  res.redirect(`/admin/users/${req.params.id}`);
+});
+
 router.post('/users/:id/ban', async (req, res) => {
   const user = await User.findByPk(req.params.id);
   if (!user) return res.status(404).send('Not found');
