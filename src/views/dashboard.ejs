@@ -1,0 +1,11 @@
+<%- include('partials/header') %>
+<h1>Welcome, <%= user.displayName %></h1>
+<section>
+  <h2>Popular files</h2>
+  <ul class="card-list">
+    <% popular.forEach(file => { %>
+      <li class="card"><a href="/files/<%= file.id %>"><%= file.title %></a> by <%= file.owner.displayName %></li>
+    <% }) %>
+  </ul>
+</section>
+<%- include('partials/footer') %>

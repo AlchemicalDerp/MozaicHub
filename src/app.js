@@ -1,0 +1,120 @@
+const express = require('express');
+const session = require('express-session');
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
+const methodOverride = require('method-override');
+const path = require('path');
+const bcrypt = require('bcrypt');
+const { sequelize, User, File, Graylist } = require('./models');
+const { Op } = require('sequelize');
+const config = require('./config');
+const { ensureAuth } = require('./middleware/auth');
+const authRoutes = require('./routes/auth');
+const fileRoutes = require('./routes/files');
+const adminRoutes = require('./routes/admin');
+const commentRoutes = require('./routes/comments');
+const friendRoutes = require('./routes/friends');
+const messageRoutes = require('./routes/messages');
+const { removeFile } = require('./storage/localStorage');
+
+const app = express();
+
+const sessionStore = new SequelizeStore({ db: sequelize });
+
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(methodOverride('_method'));
+app.use('/public', express.static(path.join(__dirname, '..', 'public')));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
+app.use(session({
+  secret: config.sessionSecret,
+  store: sessionStore,
+  resave: false,
+  saveUninitialized: false,
+}));
+
+sessionStore.sync();
+
+app.use((req, res, next) => {
+  res.locals.user = req.session.user;
+  next();
+});
+
+app.use('/', authRoutes);
+
+app.use(ensureAuth);
+
+app.get('/', async (req, res) => {
+  const popular = await File.findAll({ limit: 5, order: [['createdAt', 'DESC']], include: 'owner' });
+  res.render('dashboard', { popular });
+});
+
+app.use('/files', fileRoutes);
+app.use('/admin', adminRoutes);
+app.use('/', commentRoutes);
+app.use('/', friendRoutes);
+app.use('/', messageRoutes);
+
+app.get('/account', async (req, res) => {
+  const user = await User.findByPk(req.session.user.id, { include: ['sentFriendRequests', 'receivedFriendRequests'] });
+  res.render('account', { user });
+});
+
+app.post('/account/profile', async (req, res) => {
+  const { displayName, username, email } = req.body;
+  const existingGray = await Graylist.findOne({ where: { [Op.or]: [{ username }, { email }] } });
+  if (existingGray) {
+    req.session.grayWarning = true;
+  }
+  await User.update({ displayName, username, email }, { where: { id: req.session.user.id } });
+  const updated = await User.findByPk(req.session.user.id);
+  req.session.user = { ...req.session.user, displayName: updated.displayName, username: updated.username, email: updated.email };
+  res.redirect('/account');
+});
+
+app.post('/account/password', async (req, res) => {
+  const { password } = req.body;
+  const hash = await bcrypt.hash(password, 10);
+  await User.update({ passwordHash: hash }, { where: { id: req.session.user.id } });
+  res.redirect('/account');
+});
+
+app.use((req, res) => {
+  res.status(404).render('404');
+});
+
+async function deleteExpiredFiles() {
+  const now = new Date();
+  const expired = await File.findAll({ where: { isMarkedForDeletion: true, deletionScheduledAt: { [Op.lt]: now } } });
+  expired.forEach((file) => {
+    removeFile(path.join(config.uploadsDir, file.storedFilename));
+    file.destroy();
+  });
+}
+
+setInterval(deleteExpiredFiles, 60 * 60 * 1000);
+
+async function ensureFirstAdmin() {
+  const count = await User.count();
+  if (count === 0) {
+    const hash = await bcrypt.hash('adminpass', 10);
+    await User.create({
+      username: 'admin',
+      email: 'admin@example.com',
+      displayName: 'Administrator',
+      passwordHash: hash,
+      role: 'ADMIN',
+    });
+    console.log('Created default admin user: admin / adminpass');
+  }
+}
+
+async function start() {
+  await sequelize.sync();
+  await ensureFirstAdmin();
+  app.listen(config.port, () => console.log(`Server running on port ${config.port}`));
+}
+
+module.exports = { app, start };

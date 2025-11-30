@@ -1,0 +1,19 @@
+<%- include('../partials/header') %>
+<h2>Friends</h2>
+<ul>
+  <% friendships.forEach(f => { const friend = f.userId1 === user.id ? f.user2 : f.user1; %>
+    <li><%= friend ? friend.displayName : 'Unknown' %>
+      <form method="post" action="/friends/<%= friend ? friend.id : '' %>?_method=DELETE"><button type="submit">Unfriend</button></form>
+    </li>
+  <% }) %>
+</ul>
+<h3>Incoming Requests</h3>
+<ul>
+  <% incoming.forEach(r => { %>
+    <li>From <%= r.fromUser.displayName %>
+      <form method="post" action="/friends/requests/<%= r.id %>/accept"><button type="submit">Accept</button></form>
+      <form method="post" action="/friends/requests/<%= r.id %>/decline"><button type="submit">Decline</button></form>
+    </li>
+  <% }) %>
+</ul>
+<%- include('../partials/footer') %>

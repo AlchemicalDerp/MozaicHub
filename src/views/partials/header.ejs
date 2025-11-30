@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MozaicHub</title>
+  <link rel="stylesheet" href="/public/css/style.css" />
+</head>
+<body>
+<nav class="topnav">
+  <div class="logo">MozaicHub</div>
+  <div class="links">
+    <a href="/">Dashboard</a>
+    <a href="/files">Browse</a>
+    <a href="/files/mine">My Files</a>
+    <a href="/friends">Friends</a>
+    <a href="/messages">Messages</a>
+    <a href="/account">Account</a>
+    <% if (user && user.role === 'ADMIN') { %>
+      <a href="/admin">Admin</a>
+    <% } %>
+    <form action="/logout" method="post" class="inline">
+      <button type="submit">Logout</button>
+    </form>
+  </div>
+</nav>
+<div class="container">

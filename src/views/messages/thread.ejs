@@ -1,0 +1,12 @@
+<%- include('../partials/header') %>
+<h2>Conversation</h2>
+<ul class="chat">
+  <% messages.forEach(m => { %>
+    <li class="<%= m.fromUserId === user.id ? 'me' : 'them' %>">[<%= m.createdAt.toLocaleString() %>] <%= m.text %></li>
+  <% }) %>
+</ul>
+<form method="post" action="/messages/thread/<%= peerId %>">
+  <textarea name="text" required></textarea>
+  <button type="submit">Send</button>
+</form>
+<%- include('../partials/footer') %>

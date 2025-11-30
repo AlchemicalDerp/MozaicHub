@@ -1,0 +1,19 @@
+<%- include('../partials/header') %>
+<h2>All Files</h2>
+<table class="table">
+  <thead><tr><th>Title</th><th>Owner</th><th>Visibility</th><th>Size</th><th>Actions</th></tr></thead>
+  <tbody>
+    <% files.forEach(f => { %>
+      <tr>
+        <td><a href="/files/<%= f.id %>"><%= f.title %></a></td>
+        <td><%= f.owner ? f.owner.username : 'Unknown' %></td>
+        <td><%= f.visibility %></td>
+        <td><%= (f.sizeBytes/1024/1024).toFixed(2) %> MB</td>
+        <td>
+          <form method="post" action="/admin/files/<%= f.id %>?_method=DELETE"><button type="submit">Delete</button></form>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+<%- include('../partials/footer') %>

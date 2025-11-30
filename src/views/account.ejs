@@ -1,0 +1,39 @@
+<%- include('partials/header') %>
+<h2>Account</h2>
+<section class="form-card">
+  <h3>Profile</h3>
+  <form method="post" action="/account/profile">
+    <label>Display Name</label>
+    <input type="text" name="displayName" value="<%= user.displayName %>" />
+    <label>Username</label>
+    <input type="text" name="username" value="<%= user.username %>" />
+    <label>Email</label>
+    <input type="email" name="email" value="<%= user.email %>" />
+    <button type="submit">Save</button>
+  </form>
+</section>
+<section class="form-card">
+  <h3>Change Password</h3>
+  <form method="post" action="/account/password">
+    <label>New Password</label>
+    <input type="password" name="password" required />
+    <button type="submit">Update</button>
+  </form>
+</section>
+<section class="form-card">
+  <h3>Storage</h3>
+  <p><%= (Number(user.storageUsedBytes)/1024/1024/1024).toFixed(2) %> GB / <%= (Number(user.storageQuotaBytes)/1024/1024/1024).toFixed(2) %> GB used</p>
+</section>
+<section>
+  <h3>Friend Requests</h3>
+  <h4>Incoming</h4>
+  <ul>
+    <% user.receivedFriendRequests.forEach(req => { if (req.status === 'pending') { %>
+      <li>From <%= req.fromUserId %>
+        <form method="post" action="/friends/requests/<%= req.id %>/accept"><button type="submit">Accept</button></form>
+        <form method="post" action="/friends/requests/<%= req.id %>/decline"><button type="submit">Decline</button></form>
+      </li>
+    <% }}) %>
+  </ul>
+</section>
+<%- include('partials/footer') %>

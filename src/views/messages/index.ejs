@@ -1,0 +1,8 @@
+<%- include('../partials/header') %>
+<h2>Messages</h2>
+<ul>
+  <% threads.forEach(t => { const peer = t.userId1 === user.id ? t.user2 : t.user1; %>
+    <li><a href="/messages/thread/<%= peer ? peer.id : '' %>">Conversation with <%= peer ? peer.displayName : 'Unknown' %></a></li>
+  <% }) %>
+</ul>
+<%- include('../partials/footer') %>

@@ -1,0 +1,39 @@
+<%- include('../partials/header') %>
+<h2><%= file.title %></h2>
+<div class="meta">Uploaded by <%= file.owner.displayName %> • <%= file.visibility %></div>
+<p><%= file.description %></p>
+<div class="player">
+  <% if (file.fileCategory === 'audio') { %>
+    <audio controls src="/uploads/<%= file.storedFilename %>"></audio>
+  <% } else if (file.fileCategory === 'video') { %>
+    <video controls width="480" src="/uploads/<%= file.storedFilename %>"></video>
+  <% } else if (file.fileCategory === 'image') { %>
+    <img src="/uploads/<%= file.storedFilename %>" class="preview" />
+  <% } else if (file.fileCategory === 'pdf') { %>
+    <iframe src="/uploads/<%= file.storedFilename %>" width="600" height="500"></iframe>
+  <% } else { %>
+    <p>Download-only file.</p>
+  <% } %>
+  <a class="button" href="/files/<%= file.id %>/download">Download</a>
+</div>
+<section class="comments">
+  <h3>Comments</h3>
+  <form method="post" action="/files/<%= file.id %>/comments">
+    <textarea name="text" required></textarea>
+    <button type="submit">Add Comment</button>
+  </form>
+  <ul>
+    <% file.Comments.forEach(comment => { %>
+      <li>
+        <strong><%= comment.author.displayName %></strong> <span class="meta"><%= comment.createdAt.toDateString() %></span>
+        <p><%= comment.text %></p>
+        <% if (comment.authorUserId === user.id || user.role === 'ADMIN' || file.ownerUserId === user.id) { %>
+          <form method="post" action="/comments/<%= comment.id %>/delete">
+            <button type="submit">Delete</button>
+          </form>
+        <% } %>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+<%- include('../partials/footer') %>
