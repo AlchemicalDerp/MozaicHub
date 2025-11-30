@@ -33,6 +33,16 @@ body { font-family: Arial, sans-serif; margin: 0; background: #0f1115; color: #e
 .chat li { margin-bottom: 6px; }
 .chat .me { color: #0a7; }
 .chat .them { color: #cdd6f4; }
+.chat-shell { background: #161922; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.chat-header { display: flex; justify-content: space-between; align-items: center; }
+.chat-window { background: #0f1118; border: 1px solid #2a3040; border-radius: 12px; padding: 12px; min-height: 320px; max-height: 520px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.bubble { padding: 10px 12px; border-radius: 12px; max-width: 70%; align-self: center; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+.bubble .bubble-body p { margin: 4px 0; }
+.bubble .bubble-meta { font-size: 11px; opacity: 0.75; margin-bottom: 4px; }
+.bubble.me { background: linear-gradient(135deg, #33c9ff, #6d5dfc); color: #fff; margin-left: auto; }
+.bubble.them { background: #1e2333; color: #e8ecf3; margin-right: auto; }
+.chat-form textarea { width: 100%; background: #0f1118; color: #e8ecf3; border: 1px solid #2a3040; border-radius: 10px; padding: 10px; resize: vertical; }
+.chat-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
 .admin-nav { margin: 10px 0; display: flex; gap: 10px; }
 .admin-nav a { background: #23283b; color: #fff; padding: 8px 12px; border-radius: 6px; text-decoration: none; }
 .admin-nav a:hover { background: #1b1f2f; }
@@ -103,3 +113,8 @@ body.theme-light { background: #f6f7fb; color: #1b1f2a; }
 .theme-light .notification-icon { color: #1b1f2a; }
 .theme-light .badge-dot { border-color: #ffffff; }
 .theme-light .reason-input { background: #fff; color: #1b1f2a; border-color: #cbd2e1; }
+.theme-light .chat-shell { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.theme-light .chat-window { background: #f6f7fb; border-color: #cbd2e1; }
+.theme-light .bubble.them { background: #e9ecf5; color: #1b1f2a; }
+.theme-light .bubble.me { color: #fff; }
+.theme-light .chat-form textarea { background: #fff; color: #1b1f2a; border-color: #cbd2e1; }

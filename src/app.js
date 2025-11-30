@@ -194,7 +194,7 @@ async function ensureFirstAdmin() {
 }
 
 async function start() {
-  await sequelize.sync();
+  await sequelize.sync({ alter: true });
   await ensureFirstAdmin();
   app.listen(config.port, () => console.log(`Server running on port ${config.port}`));
 }

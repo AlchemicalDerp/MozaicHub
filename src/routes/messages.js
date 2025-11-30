@@ -25,6 +25,16 @@ router.get('/messages/thread/:userId', async (req, res) => {
   res.render('messages/thread', { thread, messages: rendered, peerId });
 });
 
+router.get('/messages/thread/:userId/data', async (req, res) => {
+  const userId = req.session.user.id;
+  const peerId = req.params.userId;
+  const thread = await MessageThread.findOne({ where: { [Op.or]: [{ userId1: userId, userId2: peerId }, { userId1: peerId, userId2: userId }] } });
+  if (!thread) return res.json([]);
+  const messages = await Message.findAll({ where: { threadId: thread.id }, order: [['createdAt', 'ASC']] });
+  const rendered = messages.map((m) => ({ ...m.toJSON(), renderedText: renderMarkdown(m.text) }));
+  res.json(rendered);
+});
+
 router.post('/messages/thread/:userId', async (req, res) => {
   const userId = req.session.user.id;
   const peerId = req.params.userId;
@@ -33,6 +43,11 @@ router.post('/messages/thread/:userId', async (req, res) => {
   let thread = await MessageThread.findOne({ where: { [Op.or]: [{ userId1: userId, userId2: peerId }, { userId1: peerId, userId2: userId }] } });
   if (!thread) thread = await MessageThread.create({ userId1: userId, userId2: peerId });
   await Message.create({ threadId: thread.id, fromUserId: userId, toUserId: peerId, text: req.body.text });
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    const messages = await Message.findAll({ where: { threadId: thread.id }, order: [['createdAt', 'ASC']] });
+    const rendered = messages.map((m) => ({ ...m.toJSON(), renderedText: renderMarkdown(m.text) }));
+    return res.json(rendered);
+  }
   res.redirect(`/messages/thread/${peerId}`);
 });
 
