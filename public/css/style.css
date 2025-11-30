@@ -34,14 +34,15 @@ body { font-family: Arial, sans-serif; margin: 0; background: #0f1115; color: #e
 .chat .me { color: #0a7; }
 .chat .them { color: #cdd6f4; }
 .chat-shell { background: #161922; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
-.chat-header { display: flex; justify-content: space-between; align-items: center; }
+.chat-header { display: flex; justify-content: space-between; align-items: center; color: inherit; }
 .chat-window { background: #0f1118; border: 1px solid #2a3040; border-radius: 12px; padding: 12px; min-height: 320px; max-height: 520px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 .bubble { padding: 10px 12px; border-radius: 12px; max-width: 70%; align-self: center; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
 .bubble .bubble-body p { margin: 4px 0; }
 .bubble .bubble-meta { font-size: 11px; opacity: 0.75; margin-bottom: 4px; }
 .bubble.me { background: linear-gradient(135deg, #33c9ff, #6d5dfc); color: #fff; margin-left: auto; }
 .bubble.them { background: #1e2333; color: #e8ecf3; margin-right: auto; }
-.chat-form textarea { width: 100%; background: #0f1118; color: #e8ecf3; border: 1px solid #2a3040; border-radius: 10px; padding: 10px; resize: vertical; }
+.chat-form { background: #0f1118; border: 1px solid #2a3040; border-radius: 10px; padding: 10px; }
+.chat-form textarea { width: 100%; background: #0f1118; color: #e8ecf3; border: 1px solid #2a3040; border-radius: 10px; padding: 10px; resize: vertical; box-sizing: border-box; }
 .chat-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
 .admin-nav { margin: 10px 0; display: flex; gap: 10px; }
 .admin-nav a { background: #23283b; color: #fff; padding: 8px 12px; border-radius: 6px; text-decoration: none; }
@@ -55,7 +56,7 @@ body { font-family: Arial, sans-serif; margin: 0; background: #0f1115; color: #e
 .hero-cta { display: flex; gap: 10px; }
 .media-grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 .media-card { background: #161922; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 8px rgba(0,0,0,0.35); }
-.media-card img, .media-card video { width: 100%; height: 170px; object-fit: cover; display: block; }
+.media-card > a > img, .media-card > a > video { width: 100%; height: 170px; object-fit: cover; display: block; }
 .media-meta { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
 .title { color: #e8ecf3; text-decoration: none; font-weight: 700; }
 .section-head { display: flex; justify-content: space-between; align-items: baseline; }
@@ -83,8 +84,9 @@ body { font-family: Arial, sans-serif; margin: 0; background: #0f1115; color: #e
 .comment-list { list-style: none; padding: 0; margin: 0; }
 .comment-list li { margin-bottom: 12px; max-width: 100%; }
 .comment-body { overflow-wrap: break-word; }
-.reply-form { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; max-width: 680px; }
-.reply-form textarea { width: 100%; min-height: 60px; }
+.reply-form { margin: 8px 0 0 44px; display: flex; flex-direction: column; gap: 6px; max-width: 620px; background: #0f1118; border: 1px solid #2a3040; padding: 8px; border-radius: 10px; }
+.reply-form textarea { width: 100%; min-height: 60px; background: transparent; color: inherit; border: 1px solid #2a3040; border-radius: 8px; padding: 8px; box-sizing: border-box; }
+.reply-form button { align-self: flex-end; }
 .notification-icon { position: relative; text-decoration: none; color: inherit; }
 .badge { position: absolute; top: -6px; right: -10px; background: #ff4d4f; color: #fff; padding: 2px 6px; border-radius: 999px; font-size: 11px; font-weight: 700; }
 .badge-anchor { position: relative; display: inline-flex; }
@@ -117,4 +119,8 @@ body.theme-light { background: #f6f7fb; color: #1b1f2a; }
 .theme-light .chat-window { background: #f6f7fb; border-color: #cbd2e1; }
 .theme-light .bubble.them { background: #e9ecf5; color: #1b1f2a; }
 .theme-light .bubble.me { color: #fff; }
+.theme-light .chat-form { background: #f6f7fb; border-color: #cbd2e1; }
+.theme-light .chat-header { color: #1b1f2a; }
 .theme-light .chat-form textarea { background: #fff; color: #1b1f2a; border-color: #cbd2e1; }
+.theme-light .reply-form { background: #f6f7fb; border-color: #cbd2e1; }
+.theme-light .reply-form textarea { background: #fff; color: #1b1f2a; border-color: #cbd2e1; }

@@ -1,6 +1,6 @@
 const express = require('express');
 const { Op } = require('sequelize');
-const { MessageThread, Message, Block } = require('../models');
+const { MessageThread, Message, Block, User } = require('../models');
 const { renderMarkdown } = require('../utils/markdown');
 
 const router = express.Router();
@@ -14,6 +14,8 @@ router.get('/messages', async (req, res) => {
 router.get('/messages/thread/:userId', async (req, res) => {
   const userId = req.session.user.id;
   const peerId = req.params.userId;
+  const peer = await User.findByPk(peerId);
+  if (!peer) return res.status(404).render('404');
   const blocked = await Block.findOne({ where: { [Op.or]: [{ blockerUserId: userId, blockedUserId: peerId }, { blockerUserId: peerId, blockedUserId: userId }] } });
   if (blocked) return res.status(403).send('Messaging unavailable');
   let thread = await MessageThread.findOne({ where: { [Op.or]: [{ userId1: userId, userId2: peerId }, { userId1: peerId, userId2: userId }] }, include: ['messages'] });
@@ -22,7 +24,7 @@ router.get('/messages/thread/:userId', async (req, res) => {
   }
   const messages = await Message.findAll({ where: { threadId: thread.id }, order: [['createdAt', 'ASC']] });
   const rendered = messages.map((m) => ({ ...m.toJSON(), renderedText: renderMarkdown(m.text) }));
-  res.render('messages/thread', { thread, messages: rendered, peerId });
+  res.render('messages/thread', { thread, messages: rendered, peerId, peer });
 });
 
 router.get('/messages/thread/:userId/data', async (req, res) => {

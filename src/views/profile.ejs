@@ -42,7 +42,7 @@
           <% } else { %>
             <div class="avatar-sm placeholder">MH</div>
           <% } %>
-          <div class="muted">@<%= profileUser.username %> • <%= f.visibility %></div>
+          <div class="muted">@<%= profileUser.username %> • <%= f.fileCategory %> • <%= f.visibility %></div>
         </div>
         <a href="/files/<%= f.id %>" class="title"><%= f.title %></a>
       </li>

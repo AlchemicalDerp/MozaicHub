@@ -4,7 +4,7 @@ const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const methodOverride = require('method-override');
 const path = require('path');
 const bcrypt = require('bcrypt');
-const { sequelize, User, File, Graylist, Notification, Friendship, FriendRequest, Block } = require('./models');
+const { sequelize, User, File, Graylist, Notification, Friendship, FriendRequest, Block, FileAccess } = require('./models');
 const { Op } = require('sequelize');
 const config = require('./config');
 const { ensureAuth } = require('./middleware/auth');
@@ -56,12 +56,14 @@ app.use(async (req, res, next) => {
 app.get('/', async (req, res) => {
   const blocks = await Block.findAll({ where: { [Op.or]: [{ blockerUserId: req.session.user.id }, { blockedUserId: req.session.user.id }] } });
   const hiddenOwners = blocks.map((b) => (b.blockerUserId === req.session.user.id ? b.blockedUserId : b.blockerUserId));
+  const allowedFileIds = await FileAccess.findAll({ where: { userId: req.session.user.id } }).then((rows) => rows.map((r) => r.fileId));
   const visibleWhere = {
     ownerUserId: hiddenOwners.length ? { [Op.notIn]: hiddenOwners } : { [Op.ne]: null },
     [Op.or]: [
       { visibility: 'public' },
       { visibility: 'unlisted' },
       { ownerUserId: req.session.user.id },
+      { [Op.and]: [{ visibility: 'private' }, { id: { [Op.in]: allowedFileIds } }] },
     ],
   };
   const friendIds = (await Friendship.findAll({ where: { [Op.or]: [{ userId1: req.session.user.id }, { userId2: req.session.user.id }] } }))
@@ -109,12 +111,14 @@ app.get('/users/:username', async (req, res) => {
   const blocks = await Block.findAll({ where: { [Op.or]: [{ blockerUserId: req.session.user.id, blockedUserId: profileUser.id }, { blockerUserId: profileUser.id, blockedUserId: req.session.user.id }] } });
   const blockApplied = blocks.find((b) => b.blockerUserId === req.session.user.id);
   const blockedByThem = blocks.find((b) => b.blockerUserId === profileUser.id);
+  const allowedIds = await FileAccess.findAll({ where: { userId: req.session.user.id } }).then((rows) => rows.map((r) => r.fileId));
   const fileWhere = {
     ownerUserId: profileUser.id,
     [Op.or]: [
       { visibility: 'public' },
       { visibility: 'unlisted' },
       { ownerUserId: req.session.user.id },
+      { [Op.and]: [{ visibility: 'private' }, { id: { [Op.in]: allowedIds } }] },
     ],
   };
   if (req.session.user.role === 'ADMIN') delete fileWhere[Op.or];

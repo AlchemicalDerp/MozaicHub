@@ -14,8 +14,14 @@ async function friendIdsForUser(userId) {
   return friendships.map((f) => (f.userId1 === userId ? f.userId2 : f.userId1));
 }
 
+async function allowedFileIdsForUser(userId) {
+  const accesses = await FileAccess.findAll({ where: { userId } });
+  return accesses.map((a) => a.fileId);
+}
+
 router.get('/', async (req, res) => {
   const q = req.query.q || '';
+  const allowedFileIds = await allowedFileIdsForUser(req.session.user.id);
   const files = await File.findAll({
     where: {
       title: { [Op.like]: `%${q}%` },
@@ -23,6 +29,7 @@ router.get('/', async (req, res) => {
         { visibility: 'public' },
         { visibility: 'unlisted' },
         { ownerUserId: req.session.user.id },
+        { [Op.and]: [{ visibility: 'private' }, { id: { [Op.in]: allowedFileIds } }] },
       ],
     },
     include: [{ model: User, as: 'owner' }],
@@ -70,6 +77,19 @@ router.post('/', (req, res, next) => {
       sizeBytes: file.size,
       visibility: visibility || 'private',
     });
+    if (visibility === 'private' && req.body.allowedUsernames) {
+      const usernames = req.body.allowedUsernames
+        .split(',')
+        .map((u) => u.trim())
+        .filter(Boolean);
+      if (usernames.length) {
+        const allowedUsers = await User.findAll({ where: { username: { [Op.in]: usernames } } });
+        await FileAccess.bulkCreate(
+          allowedUsers.map((u) => ({ fileId: fileRecord.id, userId: u.id })),
+          { ignoreDuplicates: true }
+        );
+      }
+    }
     await user.update({ storageUsedBytes: newUsage });
     const friendIds = await friendIdsForUser(userId);
     await Notification.bulkCreate(
@@ -92,7 +112,13 @@ router.get('/:id', async (req, res) => {
     ],
   });
   if (!file) return res.status(404).render('404');
-  const canView = file.visibility === 'public' || file.ownerUserId === req.session.user.id || req.session.user.role === 'ADMIN';
+  const allowed = await FileAccess.findOne({ where: { fileId: file.id, userId: req.session.user.id } });
+  const canView =
+    file.visibility === 'public' ||
+    file.visibility === 'unlisted' ||
+    file.ownerUserId === req.session.user.id ||
+    req.session.user.role === 'ADMIN' ||
+    Boolean(allowed);
   if (!canView) return res.status(403).send('Forbidden');
   const commentError = req.session.commentError;
   req.session.commentError = null;
@@ -120,7 +146,13 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/download', async (req, res) => {
   const file = await File.findByPk(req.params.id);
   if (!file) return res.status(404).send('Not found');
-  const canView = file.visibility === 'public' || file.ownerUserId === req.session.user.id || req.session.user.role === 'ADMIN';
+  const allowed = await FileAccess.findOne({ where: { fileId: file.id, userId: req.session.user.id } });
+  const canView =
+    file.visibility === 'public' ||
+    file.visibility === 'unlisted' ||
+    file.ownerUserId === req.session.user.id ||
+    req.session.user.role === 'ADMIN' ||
+    Boolean(allowed);
   if (!canView) return res.status(403).send('Forbidden');
   return res.download(path.join(config.uploadsDir, file.storedFilename), file.originalFilename);
 });
