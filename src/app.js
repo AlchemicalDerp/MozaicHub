@@ -4,7 +4,7 @@ const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const methodOverride = require('method-override');
 const path = require('path');
 const bcrypt = require('bcrypt');
-const { sequelize, User, File, Graylist } = require('./models');
+const { sequelize, User, File, Graylist, Notification, Friendship } = require('./models');
 const { Op } = require('sequelize');
 const config = require('./config');
 const { ensureAuth } = require('./middleware/auth');
@@ -14,6 +14,7 @@ const adminRoutes = require('./routes/admin');
 const commentRoutes = require('./routes/comments');
 const friendRoutes = require('./routes/friends');
 const messageRoutes = require('./routes/messages');
+const notificationRoutes = require('./routes/notifications');
 const { removeFile, profileUpload } = require('./storage/localStorage');
 
 const app = express();
@@ -46,6 +47,12 @@ app.use('/', authRoutes);
 
 app.use(ensureAuth);
 
+app.use(async (req, res, next) => {
+  const unreadCount = await Notification.count({ where: { userId: req.session.user.id, readAt: null } });
+  res.locals.unreadNotifications = unreadCount;
+  next();
+});
+
 app.get('/', async (req, res) => {
   const visibleWhere = {
     [Op.or]: [
@@ -75,6 +82,16 @@ app.use('/admin', adminRoutes);
 app.use('/', commentRoutes);
 app.use('/', friendRoutes);
 app.use('/', messageRoutes);
+app.use('/', notificationRoutes);
+
+app.get('/users/:username', async (req, res) => {
+  const profileUser = await User.findOne({ where: { username: req.params.username } });
+  if (!profileUser) return res.status(404).render('404');
+  const friendCount = await Friendship.count({
+    where: { [Op.or]: [{ userId1: profileUser.id }, { userId2: profileUser.id }] },
+  });
+  res.render('profile', { profileUser, friendCount });
+});
 
 app.get('/account', async (req, res) => {
   const user = await User.findByPk(req.session.user.id, { include: ['sentFriendRequests', 'receivedFriendRequests'] });

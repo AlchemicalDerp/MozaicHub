@@ -1,0 +1,31 @@
+<%- include('partials/header') %>
+<div class="section-head">
+  <h2>Notifications</h2>
+  <form method="post" action="/notifications/read-all" class="inline">
+    <button type="submit" class="ghost">Mark all read</button>
+  </form>
+</div>
+<ul class="card-list">
+  <% if (!notifications.length) { %>
+    <li class="card">No notifications yet.</li>
+  <% } %>
+  <% notifications.forEach(n => { %>
+    <li class="card <%= n.readAt ? '' : 'unread' %>">
+      <div class="notification-row">
+        <div>
+          <p><%= n.message %></p>
+          <div class="meta"><%= n.createdAt.toLocaleString() %></div>
+        </div>
+        <div class="notification-actions">
+          <% if (n.link) { %>
+            <a class="button secondary" href="<%= n.link %>">View</a>
+          <% } %>
+          <% if (!n.readAt) { %>
+            <form method="post" action="/notifications/<%= n.id %>/read" class="inline"><button type="submit" class="ghost">Mark read</button></form>
+          <% } %>
+        </div>
+      </div>
+    </li>
+  <% }) %>
+</ul>
+<%- include('partials/footer') %>

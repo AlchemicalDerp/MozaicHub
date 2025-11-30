@@ -1,0 +1,14 @@
+<%- include('partials/header') %>
+<div class="profile-header">
+  <% if (profileUser.profileImagePath) { %>
+    <img class="avatar-lg" src="/uploads/<%= profileUser.profileImagePath %>" alt="<%= profileUser.displayName %>" />
+  <% } else { %>
+    <div class="avatar-lg placeholder">MH</div>
+  <% } %>
+  <div>
+    <h2><%= profileUser.displayName %></h2>
+    <p class="muted">@<%= profileUser.username %></p>
+    <p class="muted">Friends: <%= friendCount %></p>
+  </div>
+</div>
+<%- include('partials/footer') %>

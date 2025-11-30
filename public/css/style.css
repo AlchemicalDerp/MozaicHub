@@ -5,6 +5,7 @@ body { font-family: Arial, sans-serif; margin: 0; background: #0f1115; color: #e
 .topnav a { color: #fff; margin-right: 10px; text-decoration: none; }
 .topnav .logo a { font-weight: bold; font-size: 18px; }
 .topnav .inline { display: inline; }
+.inline { display: inline; }
 .topnav .links { display: flex; align-items: center; gap: 10px; }
 .button, button { background: linear-gradient(135deg, #6d5dfc, #33c9ff); color: #fff; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; }
 .button { text-decoration: none; display: inline-block; }
@@ -20,10 +21,13 @@ body { font-family: Arial, sans-serif; margin: 0; background: #0f1115; color: #e
 .login-card { background: #0b0c10; padding: 22px; width: 340px; border-radius: 10px; box-shadow: 0 6px 16px rgba(0,0,0,0.35); color: #e8ecf3; }
 .login-card input { width: 100%; padding: 10px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #2a3040; background: #0f1118; color: #e8ecf3; }
 .error { color: #ff7b7b; margin-bottom: 8px; }
+.info { color: #80ffd4; margin-bottom: 8px; }
+.recover { margin-top: 14px; border-top: 1px solid #2a3040; padding-top: 12px; }
 .table { width: 100%; border-collapse: collapse; }
 .table th, .table td { padding: 8px; border-bottom: 1px solid #2a3040; }
 .meta { color: #8b95a7; font-size: 12px; }
 .muted { color: #8b95a7; }
+.small { font-size: 12px; }
 .preview { max-width: 400px; }
 .chat { list-style: none; padding: 0; }
 .chat li { margin-bottom: 6px; }
@@ -33,7 +37,7 @@ body { font-family: Arial, sans-serif; margin: 0; background: #0f1115; color: #e
 .admin-nav a { background: #23283b; color: #fff; padding: 8px 12px; border-radius: 6px; text-decoration: none; }
 .admin-nav a:hover { background: #1b1f2f; }
 .avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
-.avatar-lg { width: 96px; height: 96px; border-radius: 18px; object-fit: cover; }
+.avatar-lg { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; }
 .avatar-link { display: flex; align-items: center; }
 .avatar-row { display: flex; align-items: center; gap: 8px; }
 .placeholder { background: #2a3040; display: inline-flex; align-items: center; justify-content: center; color: #8b95a7; font-weight: 700; }
@@ -66,6 +70,15 @@ body { font-family: Arial, sans-serif; margin: 0; background: #0f1115; color: #e
 .storage-used { background: linear-gradient(135deg, #33c9ff, #6d5dfc); height: 100%; }
 .quota-row { display: flex; gap: 8px; }
 .comment-avatar { display: flex; align-items: center; gap: 10px; }
+.notification-icon { position: relative; text-decoration: none; color: inherit; }
+.badge { position: absolute; top: -6px; right: -10px; background: #ff4d4f; color: #fff; padding: 2px 6px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.badge-anchor { position: relative; display: inline-flex; }
+.badge-dot { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background: #ff4d4f; border-radius: 50%; border: 2px solid #0b0c10; }
+.notification-row { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.notification-actions { display: flex; gap: 8px; }
+.unread { border: 1px solid #6d5dfc; }
+.reason-input { padding: 6px; border-radius: 6px; border: 1px solid #2a3040; background: #0f1118; color: #e8ecf3; margin-right: 6px; }
+.comment-body p { margin: 4px 0; }
 
 .theme-light .card, .theme-light .form-card, .theme-light .file-meta, .theme-light .media-card, .theme-light .comment-form, .theme-light .comment-head, .theme-light .profile-header {
   background: #fff;
@@ -77,4 +90,11 @@ body.theme-light { background: #f6f7fb; color: #1b1f2a; }
 .theme-light .muted, .theme-light .meta { color: #4c566a; }
 .theme-light .button.secondary { color: #1b1f2a; border-color: #cbd2e1; }
 .theme-light .placeholder { background: #dfe3ed; color: #4c566a; }
-.theme-light .ghost { border-color: #cbd2e1; color: #1b1f2a; }
+.theme-light .ghost { border-color: #cbd2e1; color: #1b1f2a; background: #fff; }
+.theme-light input, .theme-light textarea, .theme-light select { background: #fff; color: #1b1f2a; border-color: #cbd2e1; }
+.theme-light .comment-body { color: #1b1f2a; }
+.theme-light .topnav { background: #ffffff; color: #1b1f2a; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.theme-light .topnav a { color: #1b1f2a; }
+.theme-light .notification-icon { color: #1b1f2a; }
+.theme-light .badge-dot { border-color: #ffffff; }
+.theme-light .reason-input { background: #fff; color: #1b1f2a; border-color: #cbd2e1; }

@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const { ensureAdmin } = require('../middleware/auth');
-const { User, File, Graylist } = require('../models');
+const { User, File, Graylist, Notification } = require('../models');
 const config = require('../config');
 
 const router = express.Router();
@@ -88,7 +88,17 @@ router.get('/files', async (req, res) => {
 });
 
 router.delete('/files/:id', async (req, res) => {
-  await File.destroy({ where: { id: req.params.id } });
+  const reason = req.body.reason || '';
+  const file = await File.findByPk(req.params.id);
+  if (file) {
+    await Notification.create({
+      userId: file.ownerUserId,
+      type: 'file-deleted',
+      message: reason ? `Your file was deleted by an Admin: ${reason}` : 'Your file was deleted by an Admin!',
+      link: '/files/mine',
+    });
+    await file.destroy();
+  }
   res.redirect('/admin/files');
 });
 

@@ -17,16 +17,27 @@
       <a href="/admin">Admin</a>
     <% } %>
     <button class="ghost" id="themeToggle" type="button">Toggle Theme</button>
+    <a href="/notifications" class="notification-icon">
+      <% if (unreadNotifications > 0) { %>
+        <span class="badge"><%= unreadNotifications %></span>
+      <% } %>
+      🔔
+    </a>
     <form action="/logout" method="post" class="inline">
       <button type="submit">Logout</button>
     </form>
-    <a href="/account" class="avatar-link">
-      <% if (user && user.profileImagePath) { %>
-        <img class="avatar-sm" src="/uploads/<%= user.profileImagePath %>" alt="Account" />
-      <% } else { %>
-        <div class="avatar-sm placeholder">You</div>
+    <div class="avatar-link badge-anchor">
+      <% if (unreadNotifications > 0) { %>
+        <span class="badge-dot"></span>
       <% } %>
-    </a>
+      <a href="/account" class="avatar-link">
+        <% if (user && user.profileImagePath) { %>
+          <img class="avatar-sm" src="/uploads/<%= user.profileImagePath %>" alt="Account" />
+        <% } else { %>
+          <div class="avatar-sm placeholder">You</div>
+        <% } %>
+      </a>
+    </div>
   </div>
 </nav>
 <div class="container">

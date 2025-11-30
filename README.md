@@ -6,9 +6,10 @@ MozaicHub is a simple full-stack file hosting and media server built with Node.j
 - Session-based authentication with bcrypt password hashing.
 - Admin-only account creation, banning with graylist tracking, and configurable per-user storage quotas.
 - File uploads with visibility controls (public/unlisted/private) and media preview for audio/video/image/PDF.
-- Commenting on accessible files.
+- Commenting on accessible files with Markdown, mentions, and notifications.
 - Friend requests, blocking, and basic messaging between friends.
 - Admin dashboards for users, files, and graylisted entries.
+- Notification center for mentions, comments on uploads, admin deletions, and friend uploads.
 - Scheduled cleanup for banned users' files after a grace period.
 
 ## Setup
@@ -17,11 +18,7 @@ MozaicHub is a simple full-stack file hosting and media server built with Node.j
    npm install
    ```
 2. Configure environment variables (optional):
-   - `PORT` (default 3000)
-   - `SESSION_SECRET`
-   - `DATABASE_URL` (defaults to local SQLite database)
-   - `UPLOADS_DIR` and `PROFILE_DIR`
-   - `MAX_UPLOAD_SIZE` (defaults to 200MB)
+   - Copy `.env.example` to `.env` and adjust values for `PORT`, `SESSION_SECRET`, `DATABASE_URL`, `UPLOADS_DIR`, `PROFILE_DIR`, `MAX_UPLOAD_SIZE`, and other runtime settings.
 3. Start the server:
    ```bash
    npm start
@@ -36,3 +33,7 @@ MozaicHub is a simple full-stack file hosting and media server built with Node.j
 
 ## Storage
 Files are stored on disk inside the `uploads/` directory, with metadata tracked in the database. The storage layer is isolated in `src/storage/localStorage.js` to allow swapping to other providers later.
+
+## Recovery and notifications
+- The login page includes an account recovery form that generates a random secure password and logs it to the server console for the requested username.
+- A notification center (🔔 in the header) surfaces mentions, comments on your uploads, friend uploads, and admin file deletions. Notifications can be marked read individually or in bulk.

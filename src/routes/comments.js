@@ -1,5 +1,7 @@
 const express = require('express');
-const { Comment, File } = require('../models');
+const { Op } = require('sequelize');
+const { Comment, File, User, Notification } = require('../models');
+const { extractMentions } = require('../utils/markdown');
 
 const router = express.Router();
 
@@ -13,7 +15,29 @@ router.post('/files/:id/comments', async (req, res) => {
     req.session.commentError = text.length > 1000 ? 'Comments are limited to 1000 characters.' : 'Comment cannot be empty.';
     return res.redirect(`/files/${file.id}`);
   }
-  await Comment.create({ fileId: file.id, authorUserId: req.session.user.id, text });
+  const comment = await Comment.create({ fileId: file.id, authorUserId: req.session.user.id, text });
+  if (file.ownerUserId !== req.session.user.id) {
+    await Notification.create({
+      userId: file.ownerUserId,
+      type: 'comment',
+      message: `${req.session.user.displayName} commented on "${file.title}"`,
+      link: `/files/${file.id}`,
+    });
+  }
+
+  const mentions = extractMentions(text);
+  if (mentions.length) {
+    const taggedUsers = await User.findAll({ where: { username: { [Op.in]: mentions } } });
+    for (const tagged of taggedUsers) {
+      if (tagged.id === req.session.user.id) continue;
+      await Notification.create({
+        userId: tagged.id,
+        type: 'mention',
+        message: `${req.session.user.displayName} mentioned you in a comment`,
+        link: `/files/${file.id}#comment-${comment.id}`,
+      });
+    }
+  }
   res.redirect(`/files/${file.id}`);
 });
 

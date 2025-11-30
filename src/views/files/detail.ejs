@@ -46,13 +46,13 @@
     </div>
     <textarea name="text" required maxlength="1000" placeholder="Add a comment..." ></textarea>
     <div class="comment-actions">
-      <span class="muted">Markdown not supported</span>
+      <span class="muted">Markdown supported • Tag friends with @username</span>
       <button type="submit">Comment</button>
     </div>
   </form>
   <ul class="comment-list">
     <% (file.Comments || []).forEach(comment => { %>
-      <li>
+      <li id="comment-<%= comment.id %>">
         <div class="comment-head">
           <% if (comment.author.profileImagePath) { %>
             <img class="avatar-sm" src="/uploads/<%= comment.author.profileImagePath %>" alt="<%= comment.author.displayName %>" />
@@ -69,7 +69,7 @@
             </form>
           <% } %>
         </div>
-        <p class="comment-body"><%= comment.text %></p>
+        <div class="comment-body"><%- comment.renderedText %></div>
       </li>
     <% }) %>
   </ul>

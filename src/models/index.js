@@ -19,6 +19,7 @@ const Friendship = require('./friendship')(sequelize);
 const Block = require('./block')(sequelize);
 const MessageThread = require('./messageThread')(sequelize);
 const Message = require('./message')(sequelize);
+const Notification = require('./notification')(sequelize);
 
 User.hasMany(File, { foreignKey: 'ownerUserId' });
 File.belongsTo(User, { as: 'owner', foreignKey: 'ownerUserId' });
@@ -53,6 +54,9 @@ MessageThread.hasMany(Message, { foreignKey: 'threadId', as: 'messages' });
 Message.belongsTo(User, { as: 'fromUser', foreignKey: 'fromUserId' });
 Message.belongsTo(User, { as: 'toUser', foreignKey: 'toUserId' });
 
+Notification.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
+
 module.exports = {
   sequelize,
   User,
@@ -65,4 +69,5 @@ module.exports = {
   Block,
   MessageThread,
   Message,
+  Notification,
 };

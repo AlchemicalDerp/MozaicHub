@@ -1,12 +1,18 @@
 const express = require('express');
 const path = require('path');
 const { Op } = require('sequelize');
-const { File, User, FileAccess, Comment } = require('../models');
+const { File, User, FileAccess, Comment, Notification, Friendship } = require('../models');
 const config = require('../config');
 const { uploadMiddleware } = require('../storage/localStorage');
 const { categorizeFile } = require('../utils/fileCategory');
+const { renderMarkdown } = require('../utils/markdown');
 
 const router = express.Router();
+
+async function friendIdsForUser(userId) {
+  const friendships = await Friendship.findAll({ where: { [Op.or]: [{ userId1: userId }, { userId2: userId }] } });
+  return friendships.map((f) => (f.userId1 === userId ? f.userId2 : f.userId1));
+}
 
 router.get('/', async (req, res) => {
   const q = req.query.q || '';
@@ -65,6 +71,15 @@ router.post('/', (req, res, next) => {
       visibility: visibility || 'private',
     });
     await user.update({ storageUsedBytes: newUsage });
+    const friendIds = await friendIdsForUser(userId);
+    await Notification.bulkCreate(
+      friendIds.map((fid) => ({
+        userId: fid,
+        type: 'friend-upload',
+        message: `${user.displayName} uploaded "${title}"`,
+        link: `/files/${fileRecord.id}`,
+      }))
+    );
     res.redirect(`/files/${fileRecord.id}`);
   });
 });
@@ -76,7 +91,11 @@ router.get('/:id', async (req, res) => {
   if (!canView) return res.status(403).send('Forbidden');
   const commentError = req.session.commentError;
   req.session.commentError = null;
-  res.render('files/detail', { file, commentError });
+  const comments = (file.Comments || []).map((comment) => {
+    const raw = comment.toJSON();
+    return { ...raw, renderedText: renderMarkdown(comment.text, (username) => `/users/${username}`) };
+  });
+  res.render('files/detail', { file: { ...file.toJSON(), Comments: comments }, commentError });
 });
 
 router.get('/:id/download', async (req, res) => {

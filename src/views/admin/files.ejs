@@ -11,7 +11,10 @@
         <td><%= f.visibility %></td>
         <td><%= (f.sizeBytes/1024/1024).toFixed(2) %> MB</td>
         <td>
-          <form method="post" action="/admin/files/<%= f.id %>?_method=DELETE"><button type="submit">Delete</button></form>
+          <form method="post" action="/admin/files/<%= f.id %>?_method=DELETE" class="inline">
+            <input type="text" name="reason" placeholder="Reason (optional)" class="reason-input" />
+            <button type="submit">Delete</button>
+          </form>
         </td>
       </tr>
     <% }) %>
