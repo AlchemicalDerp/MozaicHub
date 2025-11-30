@@ -1,0 +1,107 @@
+<%- include('../partials/header') %>
+<div class="page-head">
+  <div>
+    <p class="muted">Connections</p>
+    <h2>Friends</h2>
+  </div>
+  <a class="button" href="/messages">Open Messages</a>
+</div>
+<section class="form-card">
+  <h3>Add friend</h3>
+  <form method="get" action="/friends" class="search-row">
+    <input type="text" name="search" value="<%= search %>" placeholder="Search by username or display name" required />
+    <label class="checkbox">
+      <input type="checkbox" name="fuzzy" <%= fuzzy ? 'checked' : '' %> /> Fuzzy search
+    </label>
+    <button type="submit">Search</button>
+  </form>
+  <% if (searchError) { %>
+    <div class="alert"><%= searchError %></div>
+  <% } %>
+  <% if (results && results.length) { %>
+    <ul class="card-list">
+      <% results.forEach(u => { %>
+        <li class="card inline-actions">
+          <div class="avatar-row">
+            <% if (u.profileImagePath) { %>
+              <img class="avatar-sm" src="/uploads/<%= u.profileImagePath %>" alt="<%= u.displayName %>" />
+            <% } else { %>
+              <div class="avatar-sm placeholder">MH</div>
+            <% } %>
+            <div>
+              <a href="/users/<%= u.username %>" class="title"><%= u.displayName %></a>
+              <div class="muted">@<%= u.username %></div>
+            </div>
+          </div>
+          <div class="action-row">
+            <form method="post" action="/friends/requests">
+              <input type="hidden" name="toUserId" value="<%= u.id %>" />
+              <button type="submit">Add Friend</button>
+            </form>
+            <form method="post" action="/friends/<%= u.id %>/block">
+              <button type="submit" class="ghost">Block</button>
+            </form>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</section>
+<section>
+  <div class="section-head">
+    <h3>Your friends</h3>
+    <p class="muted">Tap to view profile, message, or unfriend.</p>
+  </div>
+  <ul class="card-list">
+    <% friendships.forEach(f => { const friend = f.userId1 === user.id ? f.user2 : f.user1; %>
+      <li class="card inline-actions">
+        <div class="avatar-row">
+          <% if (friend && friend.profileImagePath) { %>
+            <img class="avatar-sm" src="/uploads/<%= friend.profileImagePath %>" alt="<%= friend.displayName %>" />
+          <% } else { %>
+            <div class="avatar-sm placeholder">MH</div>
+          <% } %>
+          <div>
+            <a href="/users/<%= friend ? friend.username : '' %>" class="title"><%= friend ? friend.displayName : 'Unknown' %></a>
+            <div class="muted">@<%= friend ? friend.username : '' %></div>
+          </div>
+        </div>
+        <div class="action-row">
+          <form method="get" action="/messages/thread/<%= friend ? friend.id : '' %>">
+            <button type="submit" class="secondary">Message</button>
+          </form>
+          <form method="post" action="/friends/<%= friend ? friend.id : '' %>?_method=DELETE"><button type="submit" class="ghost">Unfriend</button></form>
+          <form method="post" action="/friends/<%= friend ? friend.id : '' %>/block"><button type="submit" class="ghost">Block</button></form>
+        </div>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+<section>
+  <div class="section-head">
+    <h3>Incoming Requests</h3>
+  </div>
+  <ul class="card-list">
+    <% incoming.forEach(r => { %>
+      <li class="card inline-actions">
+        <div class="avatar-row">
+          <% if (r.fromUser.profileImagePath) { %>
+            <img class="avatar-sm" src="/uploads/<%= r.fromUser.profileImagePath %>" alt="<%= r.fromUser.displayName %>" />
+          <% } else { %>
+            <div class="avatar-sm placeholder">MH</div>
+          <% } %>
+          <div>
+            <a href="/users/<%= r.fromUser.username %>" class="title"><%= r.fromUser.displayName %></a>
+            <div class="muted">@<%= r.fromUser.username %></div>
+          </div>
+        </div>
+        <div class="action-row">
+          <form method="post" action="/friends/requests/<%= r.id %>/accept"><button type="submit">Accept</button></form>
+          <form method="post" action="/friends/requests/<%= r.id %>/decline"><button type="submit" class="ghost">Decline</button></form>
+          <form method="post" action="/friends/<%= r.fromUser.id %>/block"><button type="submit" class="ghost">Block</button></form>
+        </div>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+<%- include('../partials/footer') %>

@@ -1,0 +1,40 @@
+<%- include('../partials/header') %>
+<%- include('./partials/nav') %>
+<h2>User Detail</h2>
+<% const editingSelf = currentUser && currentUser.id === user.id; %>
+<div class="card">
+  <% const quotaGB = Number(user.storageQuotaBytes)/(1024*1024*1024); const quotaMB = Number(user.storageQuotaBytes)/(1024*1024);
+     const useGB = quotaGB >= 1; const quotaValue = useGB ? quotaGB.toFixed(2) : quotaMB.toFixed(0); %>
+  <form method="post" action="/admin/users/<%= user.id %>?_method=PATCH" class="form-card">
+    <label>Username</label>
+    <input type="text" name="username" value="<%= user.username %>" required />
+    <label>Email</label>
+    <input type="email" name="email" value="<%= user.email %>" required />
+    <label>Display Name</label>
+    <input type="text" name="displayName" value="<%= user.displayName %>" required />
+    <label>Role</label>
+    <select name="role" <%= editingSelf ? 'disabled' : '' %>>
+      <option value="USER" <%= user.role === 'USER' ? 'selected' : '' %>>User</option>
+      <option value="ADMIN" <%= user.role === 'ADMIN' ? 'selected' : '' %>>Admin</option>
+    </select>
+    <% if (editingSelf) { %>
+      <p class="muted">Admins cannot downgrade their own role.</p>
+    <% } %>
+    <label>Storage Quota</label>
+    <div class="quota-row">
+      <input type="number" step="0.01" name="storageQuotaValue" value="<%= quotaValue %>" min="0" />
+      <select name="storageQuotaUnit">
+        <option value="GB" <%= useGB ? 'selected' : '' %>>GB</option>
+        <option value="MB" <%= useGB ? '' : 'selected' %>>MB</option>
+      </select>
+    </div>
+    <button type="submit">Save Changes</button>
+  </form>
+  <p>Status: <%= user.isBanned ? 'Banned' : 'Active' %></p>
+</div>
+<form method="post" action="/admin/users/<%= user.id %>/ban">
+  <label>Reason</label>
+  <input type="text" name="reason" />
+  <button type="submit">Ban User</button>
+</form>
+<%- include('../partials/footer') %>

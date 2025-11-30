@@ -1,0 +1,52 @@
+<%- include('partials/header') %>
+<div class="profile-header">
+  <% if (profileUser.profileImagePath) { %>
+    <img class="avatar-lg" src="/uploads/<%= profileUser.profileImagePath %>" alt="<%= profileUser.displayName %>" />
+  <% } else { %>
+    <div class="avatar-lg placeholder">MH</div>
+  <% } %>
+  <div>
+    <h2><%= profileUser.displayName %></h2>
+    <p class="muted">@<%= profileUser.username %></p>
+    <p class="muted">Friends: <%= friendCount %></p>
+    <% if (!blockApplied && !blockedByThem && !isFriend && !pendingRequest && user.id !== profileUser.id) { %>
+      <form method="post" action="/friends/requests">
+        <input type="hidden" name="toUserId" value="<%= profileUser.id %>" />
+        <button type="submit">Add Friend</button>
+      </form>
+    <% } %>
+    <% if (pendingRequest) { %><p class="muted">Friend request sent.</p><% } %>
+    <% if (isFriend) { %>
+      <form method="get" action="/messages/thread/<%= profileUser.id %>" class="inline"><button type="submit" class="secondary">Message</button></form>
+      <form method="post" action="/friends/<%= profileUser.id %>?_method=DELETE" class="inline"><button type="submit" class="ghost">Unfriend</button></form>
+    <% } %>
+    <% if (!blockedByThem && user.id !== profileUser.id) { %>
+      <form method="post" action="/friends/<%= profileUser.id %>/<%= blockApplied ? 'unblock' : 'block' %>" class="inline">
+        <button type="submit" class="ghost"><%= blockApplied ? 'Unblock' : 'Block user' %></button>
+      </form>
+    <% } %>
+    <% if (blockedByThem) { %><p class="alert">You are blocked by this user.</p><% } %>
+  </div>
+</div>
+<section>
+  <div class="section-head">
+    <h3><%= profileUser.displayName %>'s uploads</h3>
+    <p class="muted">Recent files</p>
+  </div>
+  <ul class="card-list">
+    <% uploads.forEach(f => { %>
+      <li class="card">
+        <div class="avatar-row">
+          <% if (profileUser.profileImagePath) { %>
+            <img class="avatar-sm" src="/uploads/<%= profileUser.profileImagePath %>" alt="<%= profileUser.displayName %>" />
+          <% } else { %>
+            <div class="avatar-sm placeholder">MH</div>
+          <% } %>
+          <div class="muted">@<%= profileUser.username %> • <%= f.fileCategory %> • <%= f.visibility %></div>
+        </div>
+        <a href="/files/<%= f.id %>" class="title"><%= f.title %></a>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+<%- include('partials/footer') %>

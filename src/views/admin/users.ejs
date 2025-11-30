@@ -1,0 +1,35 @@
+<%- include('../partials/header') %>
+<%- include('./partials/nav') %>
+<h2>Manage Users</h2>
+<form method="post" action="/admin/users" class="form-card">
+  <h3>Create User</h3>
+  <input type="text" name="username" placeholder="Username" required />
+  <input type="email" name="email" placeholder="Email" required />
+  <input type="text" name="displayName" placeholder="Display name" required />
+  <input type="password" name="password" placeholder="Password" required />
+  <select name="role">
+    <option value="USER">User</option>
+    <option value="ADMIN">Admin</option>
+  </select>
+  <button type="submit">Create</button>
+</form>
+<table class="table">
+  <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+  <tbody>
+    <% users.forEach(u => { %>
+      <tr>
+        <td><a href="/admin/users/<%= u.id %>"><%= u.username %></a></td>
+        <td><%= u.email %></td>
+        <td><%= u.role %></td>
+        <td><%= u.isBanned ? 'Banned' : 'Active' %></td>
+        <td>
+          <form method="post" action="/admin/users/<%= u.id %>/ban"><button type="submit">Ban</button></form>
+          <form method="post" action="/admin/users/<%= u.id %>/unban"><button type="submit">Unban</button></form>
+          <form method="post" action="/admin/users/<%= u.id %>/reset-password"><button type="submit">Reset Password</button></form>
+          <form method="post" action="/admin/users/<%= u.id %>?_method=DELETE"><button type="submit">Delete</button></form>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+<%- include('../partials/footer') %>

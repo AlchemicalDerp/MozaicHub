@@ -1,0 +1,111 @@
+<%- include('partials/header') %>
+<div class="hero">
+  <div>
+    <p class="muted">Welcome back</p>
+    <h1>Hey <%= user.displayName %>, explore the latest drops.</h1>
+  </div>
+  <div class="hero-cta">
+    <a class="button" href="/files/upload">Upload</a>
+    <a class="button secondary" href="/files">Browse</a>
+  </div>
+</div>
+<section>
+  <div class="section-head">
+    <h2>Images & Videos</h2>
+    <p class="muted">Peek the latest visual uploads.</p>
+  </div>
+  <ul class="media-grid">
+    <% imagesAndVideos.forEach(file => { %>
+      <li class="media-card">
+        <a href="/files/<%= file.id %>">
+          <% if (file.fileCategory === 'image') { %>
+            <img src="/uploads/<%= file.storedFilename %>" alt="<%= file.title %>" />
+          <% } else { %>
+            <video src="/uploads/<%= file.storedFilename %>" muted></video>
+          <% } %>
+        </a>
+        <div class="media-meta">
+          <div class="avatar-row">
+            <% if (file.owner.profileImagePath) { %>
+              <img class="avatar-sm" src="/uploads/<%= file.owner.profileImagePath %>" alt="<%= file.owner.displayName %>" />
+            <% } else { %>
+              <div class="avatar-sm placeholder">MH</div>
+            <% } %>
+            <a class="muted" href="/users/<%= file.owner.username %>">by <%= file.owner.displayName %></a>
+          </div>
+          <a href="/files/<%= file.id %>" class="title"><%= file.title %></a>
+        </div>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+<section>
+  <div class="section-head">
+    <h2>Files & Other</h2>
+    <p class="muted">Documents, audio, and everything else.</p>
+  </div>
+  <ul class="card-list">
+    <% otherFiles.forEach(file => { %>
+      <li class="card">
+        <div class="avatar-row">
+          <% if (file.owner.profileImagePath) { %>
+            <img class="avatar-sm" src="/uploads/<%= file.owner.profileImagePath %>" alt="<%= file.owner.displayName %>" />
+          <% } else { %>
+            <div class="avatar-sm placeholder">MH</div>
+          <% } %>
+          <a class="muted" href="/users/<%= file.owner.username %>">by <%= file.owner.displayName %></a>
+        </div>
+        <a href="/files/<%= file.id %>" class="title"><%= file.title %></a>
+        <p class="muted"><%= file.fileCategory %> • <%= file.visibility %></p>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+<section>
+  <div class="section-head">
+    <h2>Uploaded by Friends</h2>
+    <p class="muted">Latest from your circle.</p>
+  </div>
+  <ul class="card-list">
+    <% (friendUploads || []).forEach(file => { %>
+      <li class="card">
+        <div class="avatar-row">
+          <% if (file.owner.profileImagePath) { %>
+            <img class="avatar-sm" src="/uploads/<%= file.owner.profileImagePath %>" alt="<%= file.owner.displayName %>" />
+          <% } else { %>
+            <div class="avatar-sm placeholder">MH</div>
+          <% } %>
+          <a class="title" href="/users/<%= file.owner.username %>"><%= file.owner.displayName %></a>
+        </div>
+        <a href="/files/<%= file.id %>" class="title"><%= file.title %></a>
+        <p class="muted"><%= file.fileCategory %> • <%= file.visibility %></p>
+      </li>
+    <% }) %>
+    <% if (!friendUploads || friendUploads.length === 0) { %>
+      <li class="card muted">No recent uploads from friends yet.</li>
+    <% } %>
+  </ul>
+</section>
+<section>
+  <div class="section-head">
+    <h2>Popular right now</h2>
+    <p class="muted">Fresh activity across MozaicHub.</p>
+  </div>
+  <ul class="card-list">
+    <% popular.forEach(file => { %>
+      <li class="card">
+        <div class="avatar-row">
+          <% if (file.owner.profileImagePath) { %>
+            <img class="avatar-sm" src="/uploads/<%= file.owner.profileImagePath %>" alt="<%= file.owner.displayName %>" />
+          <% } else { %>
+            <div class="avatar-sm placeholder">MH</div>
+          <% } %>
+          <span class="muted">by <%= file.owner.displayName %></span>
+        </div>
+        <a href="/files/<%= file.id %>" class="title"><%= file.title %></a>
+        <p class="muted"><%= file.visibility %></p>
+      </li>
+    <% }) %>
+  </ul>
+</section>
+<%- include('partials/footer') %>

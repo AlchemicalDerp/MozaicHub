@@ -1,0 +1,72 @@
+<%- include('../partials/header') %>
+<div class="chat-shell">
+  <div class="chat-header">
+    <h2>Conversation with <%= peer.displayName %></h2>
+  </div>
+  <div id="chatWindow" class="chat-window">
+    <% messages.forEach(m => { %>
+      <div class="bubble <%= m.fromUserId === user.id ? 'me' : 'them' %>">
+        <div class="bubble-meta"><%= new Date(m.createdAt).toLocaleString() %></div>
+        <div class="bubble-body"><%- m.renderedText %></div>
+      </div>
+    <% }) %>
+  </div>
+  <form id="chatForm" class="chat-form" method="post" action="/messages/thread/<%= peerId %>">
+    <textarea name="text" id="chatInput" required placeholder="Write a message..." rows="3"></textarea>
+    <div class="chat-actions">
+      <button type="submit">Send</button>
+    </div>
+  </form>
+</div>
+<script>
+  const chatWindow = document.getElementById('chatWindow');
+  const chatForm = document.getElementById('chatForm');
+  const chatInput = document.getElementById('chatInput');
+  const peerId = '<%= peerId %>';
+
+  function renderMessages(list) {
+    chatWindow.innerHTML = '';
+    list.forEach((m) => {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${m.fromUserId === <%- user.id %> ? 'me' : 'them'}`;
+      const meta = document.createElement('div');
+      meta.className = 'bubble-meta';
+      meta.textContent = new Date(m.createdAt).toLocaleString();
+      const body = document.createElement('div');
+      body.className = 'bubble-body';
+      body.innerHTML = m.renderedText;
+      bubble.appendChild(meta);
+      bubble.appendChild(body);
+      chatWindow.appendChild(bubble);
+    });
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  async function refreshMessages() {
+    const res = await fetch(`/messages/thread/${peerId}/data`);
+    if (!res.ok) return;
+    const data = await res.json();
+    renderMessages(data);
+  }
+
+  chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (!text) return;
+    const res = await fetch(`/messages/thread/${peerId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      renderMessages(data);
+      chatInput.value = '';
+      chatInput.focus();
+    }
+  });
+
+  setInterval(refreshMessages, 3000);
+  refreshMessages();
+</script>
+<%- include('../partials/footer') %>

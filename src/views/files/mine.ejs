@@ -1,0 +1,15 @@
+<%- include('../partials/header') %>
+<h2>My Files</h2>
+<a class="button" href="/files/upload">Upload new file</a>
+<ul class="card-list">
+  <% files.forEach(file => { %>
+    <li class="card">
+      <a class="title" href="/files/<%= file.id %>"><%= file.title %></a>
+      <div class="meta"><%= file.visibility %> • <%= (file.sizeBytes/1024/1024).toFixed(2) %> MB</div>
+      <form action="/files/<%= file.id %>?_method=DELETE" method="post">
+        <button type="submit">Delete</button>
+      </form>
+    </li>
+  <% }) %>
+</ul>
+<%- include('../partials/footer') %>

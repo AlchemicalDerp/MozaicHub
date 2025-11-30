@@ -1,0 +1,88 @@
+<%- include('../partials/header') %>
+<div class="file-hero">
+  <div class="file-meta">
+    <p class="muted">Visibility: <%= file.visibility %></p>
+    <h2><%= file.title %></h2>
+    <div class="avatar-row">
+      <% if (file.owner.profileImagePath) { %>
+        <img class="avatar-sm" src="/uploads/<%= file.owner.profileImagePath %>" alt="<%= file.owner.displayName %>" />
+      <% } else { %>
+        <div class="avatar-sm placeholder">MH</div>
+      <% } %>
+      <a class="muted" href="/users/<%= file.owner.username %>">Uploaded by <%= file.owner.displayName %></a>
+    </div>
+    <p class="muted"><%= file.description %></p>
+    <a class="button" href="/files/<%= file.id %>/download">Download</a>
+  </div>
+  <div class="media-stage">
+    <% if (file.fileCategory === 'audio') { %>
+      <audio controls src="/uploads/<%= file.storedFilename %>"></audio>
+    <% } else if (file.fileCategory === 'video') { %>
+      <video controls src="/uploads/<%= file.storedFilename %>" class="hero-video"></video>
+    <% } else if (file.fileCategory === 'image') { %>
+      <img src="/uploads/<%= file.storedFilename %>" class="hero-image" />
+    <% } else if (file.fileCategory === 'pdf') { %>
+      <iframe src="/uploads/<%= file.storedFilename %>" class="pdf-frame"></iframe>
+    <% } else { %>
+      <div class="download-only">Download-only file.</div>
+    <% } %>
+  </div>
+</div>
+<section class="comments">
+  <div class="section-head">
+    <h3>Comments</h3>
+    <p class="muted">Share your thoughts (1000 characters max).</p>
+  </div>
+  <% if (commentError) { %>
+    <div class="alert"><%= commentError %></div>
+  <% } %>
+  <form method="post" action="/files/<%= file.id %>/comments" class="comment-form">
+    <div class="comment-avatar">
+      <% if (user.profileImagePath) { %>
+        <img class="avatar-sm" src="/uploads/<%= user.profileImagePath %>" alt="Your avatar" />
+      <% } else { %>
+        <div class="avatar-sm placeholder">You</div>
+      <% } %>
+    </div>
+    <textarea name="text" required maxlength="1000" placeholder="Add a comment..." ></textarea>
+    <div class="comment-actions">
+      <span class="muted">Markdown supported • Tag friends with @username</span>
+      <button type="submit">Comment</button>
+    </div>
+  </form>
+  <% const renderThread = (comments, depth = 0) => { %>
+    <ul class="comment-list" style="margin-left: <%= depth * 16 %>px;">
+      <% comments.forEach(comment => { %>
+        <li id="comment-<%= comment.id %>">
+          <div class="comment-head">
+            <% if (comment.author.profileImagePath) { %>
+              <a href="/users/<%= comment.author.username %>"><img class="avatar-sm" src="/uploads/<%= comment.author.profileImagePath %>" alt="<%= comment.author.displayName %>" /></a>
+            <% } else { %>
+              <div class="avatar-sm placeholder">MH</div>
+            <% } %>
+            <div>
+              <a href="/users/<%= comment.author.username %>"><strong><%= comment.author.displayName %></strong></a>
+              <div class="meta"><%= new Date(comment.createdAt).toDateString() %></div>
+            </div>
+            <% if (comment.authorUserId === user.id || user.role === 'ADMIN' || file.ownerUserId === user.id) { %>
+              <form method="post" action="/comments/<%= comment.id %>/delete" class="inline">
+                <button type="submit" class="ghost">Delete</button>
+              </form>
+            <% } %>
+          </div>
+          <div class="comment-body"><%- comment.renderedText %></div>
+          <form method="post" action="/files/<%= file.id %>/comments" class="reply-form">
+            <input type="hidden" name="parentCommentId" value="<%= comment.id %>" />
+            <textarea name="text" maxlength="1000" placeholder="Reply to @<%= comment.author.username %>"></textarea>
+            <button type="submit" class="ghost">Reply</button>
+          </form>
+          <% if (comment.replies && comment.replies.length) { %>
+            <%- renderThread(comment.replies, depth + 1) %>
+          <% } %>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+  <%- renderThread(file.Comments || []) %>
+</section>
+<%- include('../partials/footer') %>

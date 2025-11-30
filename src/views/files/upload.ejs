@@ -1,0 +1,32 @@
+<%- include('../partials/header') %>
+<h2>Upload File</h2>
+<form method="post" action="/files" enctype="multipart/form-data" class="form-card">
+  <label>Title</label>
+  <input type="text" name="title" required />
+  <label>Description</label>
+  <textarea name="description"></textarea>
+  <label>Visibility</label>
+  <select name="visibility">
+    <option value="public">Public</option>
+    <option value="unlisted">Unlisted</option>
+    <option value="private">Private</option>
+  </select>
+  <div id="allowedUsers" style="display:none;">
+    <label>Allowed users (usernames, comma separated)</label>
+    <input type="text" name="allowedUsernames" placeholder="alice,bob,charlie" />
+    <p class="muted small">Only used for private files.</p>
+  </div>
+  <label>File</label>
+  <input type="file" name="file" required />
+  <button type="submit">Upload</button>
+</form>
+<script>
+  const visibilitySelect = document.querySelector('select[name="visibility"]');
+  const allowedUsers = document.getElementById('allowedUsers');
+  function toggleAllowed() {
+    allowedUsers.style.display = visibilitySelect.value === 'private' ? 'block' : 'none';
+  }
+  visibilitySelect.addEventListener('change', toggleAllowed);
+  toggleAllowed();
+</script>
+<%- include('../partials/footer') %>
