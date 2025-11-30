@@ -31,6 +31,8 @@ File.hasMany(Comment, { foreignKey: 'fileId' });
 Comment.belongsTo(File, { foreignKey: 'fileId' });
 Comment.belongsTo(User, { as: 'author', foreignKey: 'authorUserId' });
 User.hasMany(Comment, { foreignKey: 'authorUserId' });
+Comment.belongsTo(Comment, { as: 'parent', foreignKey: 'parentCommentId' });
+Comment.hasMany(Comment, { as: 'replies', foreignKey: 'parentCommentId' });
 
 FriendRequest.belongsTo(User, { as: 'fromUser', foreignKey: 'fromUserId' });
 FriendRequest.belongsTo(User, { as: 'toUser', foreignKey: 'toUserId' });

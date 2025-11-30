@@ -2,7 +2,7 @@
 <h2>Conversation</h2>
 <ul class="chat">
   <% messages.forEach(m => { %>
-    <li class="<%= m.fromUserId === user.id ? 'me' : 'them' %>">[<%= m.createdAt.toLocaleString() %>] <%= m.text %></li>
+    <li class="<%= m.fromUserId === user.id ? 'me' : 'them' %>">[<%= new Date(m.createdAt).toLocaleString() %>] <span class="chat-body"><%- m.renderedText %></span></li>
   <% }) %>
 </ul>
 <form method="post" action="/messages/thread/<%= peerId %>">

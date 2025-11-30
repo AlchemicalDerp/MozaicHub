@@ -31,7 +31,7 @@
             <% } else { %>
               <div class="avatar-sm placeholder">MH</div>
             <% } %>
-            <span class="muted">by <%= file.owner.displayName %></span>
+            <a class="muted" href="/users/<%= file.owner.username %>">by <%= file.owner.displayName %></a>
           </div>
           <a href="/files/<%= file.id %>" class="title"><%= file.title %></a>
         </div>
@@ -53,12 +53,37 @@
           <% } else { %>
             <div class="avatar-sm placeholder">MH</div>
           <% } %>
-          <span class="muted">by <%= file.owner.displayName %></span>
+          <a class="muted" href="/users/<%= file.owner.username %>">by <%= file.owner.displayName %></a>
         </div>
         <a href="/files/<%= file.id %>" class="title"><%= file.title %></a>
         <p class="muted"><%= file.fileCategory %> • <%= file.visibility %></p>
       </li>
     <% }) %>
+  </ul>
+</section>
+<section>
+  <div class="section-head">
+    <h2>Uploaded by Friends</h2>
+    <p class="muted">Latest from your circle.</p>
+  </div>
+  <ul class="card-list">
+    <% (friendUploads || []).forEach(file => { %>
+      <li class="card">
+        <div class="avatar-row">
+          <% if (file.owner.profileImagePath) { %>
+            <img class="avatar-sm" src="/uploads/<%= file.owner.profileImagePath %>" alt="<%= file.owner.displayName %>" />
+          <% } else { %>
+            <div class="avatar-sm placeholder">MH</div>
+          <% } %>
+          <a class="title" href="/users/<%= file.owner.username %>"><%= file.owner.displayName %></a>
+        </div>
+        <a href="/files/<%= file.id %>" class="title"><%= file.title %></a>
+        <p class="muted"><%= file.fileCategory %> • <%= file.visibility %></p>
+      </li>
+    <% }) %>
+    <% if (!friendUploads || friendUploads.length === 0) { %>
+      <li class="card muted">No recent uploads from friends yet.</li>
+    <% } %>
   </ul>
 </section>
 <section>

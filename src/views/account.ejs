@@ -42,6 +42,12 @@
   </form>
 </section>
 <section class="form-card">
+  <h3>Session</h3>
+  <form action="/logout" method="post">
+    <button type="submit" class="ghost">Logout</button>
+  </form>
+</section>
+<section class="form-card">
   <h3>Storage</h3>
   <div class="storage-bar">
     <div class="storage-used" style="width: <%= Math.min(100, (Number(user.storageUsedBytes)/Number(user.storageQuotaBytes))*100) %>%"></div>

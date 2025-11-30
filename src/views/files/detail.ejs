@@ -9,7 +9,7 @@
       <% } else { %>
         <div class="avatar-sm placeholder">MH</div>
       <% } %>
-      <span class="muted">Uploaded by <%= file.owner.displayName %></span>
+      <a class="muted" href="/users/<%= file.owner.username %>">Uploaded by <%= file.owner.displayName %></a>
     </div>
     <p class="muted"><%= file.description %></p>
     <a class="button" href="/files/<%= file.id %>/download">Download</a>
@@ -50,28 +50,39 @@
       <button type="submit">Comment</button>
     </div>
   </form>
-  <ul class="comment-list">
-    <% (file.Comments || []).forEach(comment => { %>
-      <li id="comment-<%= comment.id %>">
-        <div class="comment-head">
-          <% if (comment.author.profileImagePath) { %>
-            <img class="avatar-sm" src="/uploads/<%= comment.author.profileImagePath %>" alt="<%= comment.author.displayName %>" />
-          <% } else { %>
-            <div class="avatar-sm placeholder">MH</div>
-          <% } %>
-          <div>
-            <strong><%= comment.author.displayName %></strong>
-            <div class="meta"><%= comment.createdAt.toDateString() %></div>
+  <% const renderThread = (comments, depth = 0) => { %>
+    <ul class="comment-list" style="margin-left: <%= depth * 16 %>px;">
+      <% comments.forEach(comment => { %>
+        <li id="comment-<%= comment.id %>">
+          <div class="comment-head">
+            <% if (comment.author.profileImagePath) { %>
+              <a href="/users/<%= comment.author.username %>"><img class="avatar-sm" src="/uploads/<%= comment.author.profileImagePath %>" alt="<%= comment.author.displayName %>" /></a>
+            <% } else { %>
+              <div class="avatar-sm placeholder">MH</div>
+            <% } %>
+            <div>
+              <a href="/users/<%= comment.author.username %>"><strong><%= comment.author.displayName %></strong></a>
+              <div class="meta"><%= new Date(comment.createdAt).toDateString() %></div>
+            </div>
+            <% if (comment.authorUserId === user.id || user.role === 'ADMIN' || file.ownerUserId === user.id) { %>
+              <form method="post" action="/comments/<%= comment.id %>/delete" class="inline">
+                <button type="submit" class="ghost">Delete</button>
+              </form>
+            <% } %>
           </div>
-          <% if (comment.authorUserId === user.id || user.role === 'ADMIN' || file.ownerUserId === user.id) { %>
-            <form method="post" action="/comments/<%= comment.id %>/delete" class="inline">
-              <button type="submit" class="ghost">Delete</button>
-            </form>
+          <div class="comment-body"><%- comment.renderedText %></div>
+          <form method="post" action="/files/<%= file.id %>/comments" class="reply-form">
+            <input type="hidden" name="parentCommentId" value="<%= comment.id %>" />
+            <textarea name="text" maxlength="1000" placeholder="Reply to @<%= comment.author.username %>"></textarea>
+            <button type="submit" class="ghost">Reply</button>
+          </form>
+          <% if (comment.replies && comment.replies.length) { %>
+            <%- renderThread(comment.replies, depth + 1) %>
           <% } %>
-        </div>
-        <div class="comment-body"><%- comment.renderedText %></div>
-      </li>
-    <% }) %>
-  </ul>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+  <%- renderThread(file.Comments || []) %>
 </section>
 <%- include('../partials/footer') %>

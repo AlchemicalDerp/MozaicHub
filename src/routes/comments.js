@@ -15,7 +15,15 @@ router.post('/files/:id/comments', async (req, res) => {
     req.session.commentError = text.length > 1000 ? 'Comments are limited to 1000 characters.' : 'Comment cannot be empty.';
     return res.redirect(`/files/${file.id}`);
   }
-  const comment = await Comment.create({ fileId: file.id, authorUserId: req.session.user.id, text });
+  const parentCommentId = req.body.parentCommentId ? Number(req.body.parentCommentId) : null;
+  if (parentCommentId) {
+    const parent = await Comment.findByPk(parentCommentId);
+    if (!parent || parent.fileId !== file.id) {
+      req.session.commentError = 'Reply target not found.';
+      return res.redirect(`/files/${file.id}`);
+    }
+  }
+  const comment = await Comment.create({ fileId: file.id, authorUserId: req.session.user.id, text, parentCommentId });
   if (file.ownerUserId !== req.session.user.id) {
     await Notification.create({
       userId: file.ownerUserId,
@@ -47,6 +55,7 @@ router.post('/comments/:commentId/delete', async (req, res) => {
   if (comment.authorUserId !== req.session.user.id && comment.File.ownerUserId !== req.session.user.id && req.session.user.role !== 'ADMIN') {
     return res.status(403).send('Forbidden');
   }
+  await Comment.destroy({ where: { parentCommentId: comment.id } });
   await comment.destroy();
   res.redirect(`/files/${comment.fileId}`);
 });

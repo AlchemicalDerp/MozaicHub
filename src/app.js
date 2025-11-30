@@ -4,7 +4,7 @@ const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const methodOverride = require('method-override');
 const path = require('path');
 const bcrypt = require('bcrypt');
-const { sequelize, User, File, Graylist, Notification, Friendship } = require('./models');
+const { sequelize, User, File, Graylist, Notification, Friendship, FriendRequest, Block } = require('./models');
 const { Op } = require('sequelize');
 const config = require('./config');
 const { ensureAuth } = require('./middleware/auth');
@@ -54,13 +54,19 @@ app.use(async (req, res, next) => {
 });
 
 app.get('/', async (req, res) => {
+  const blocks = await Block.findAll({ where: { [Op.or]: [{ blockerUserId: req.session.user.id }, { blockedUserId: req.session.user.id }] } });
+  const hiddenOwners = blocks.map((b) => (b.blockerUserId === req.session.user.id ? b.blockedUserId : b.blockerUserId));
   const visibleWhere = {
+    ownerUserId: hiddenOwners.length ? { [Op.notIn]: hiddenOwners } : { [Op.ne]: null },
     [Op.or]: [
       { visibility: 'public' },
       { visibility: 'unlisted' },
       { ownerUserId: req.session.user.id },
     ],
   };
+  const friendIds = (await Friendship.findAll({ where: { [Op.or]: [{ userId1: req.session.user.id }, { userId2: req.session.user.id }] } }))
+    .map((f) => (f.userId1 === req.session.user.id ? f.userId2 : f.userId1))
+    .filter((id) => !hiddenOwners.includes(id));
   const popular = await File.findAll({ limit: 6, order: [['createdAt', 'DESC']], include: 'owner', where: visibleWhere });
   const imagesAndVideos = await File.findAll({
     limit: 8,
@@ -74,7 +80,15 @@ app.get('/', async (req, res) => {
     where: { ...visibleWhere, fileCategory: { [Op.notIn]: ['image', 'video'] } },
     include: 'owner',
   });
-  res.render('dashboard', { popular, imagesAndVideos, otherFiles });
+  const friendUploads = friendIds.length
+    ? await File.findAll({
+        limit: 6,
+        order: [['createdAt', 'DESC']],
+        where: { ...visibleWhere, ownerUserId: { [Op.in]: friendIds } },
+        include: 'owner',
+      })
+    : [];
+  res.render('dashboard', { popular, imagesAndVideos, otherFiles, friendUploads });
 });
 
 app.use('/files', fileRoutes);
@@ -90,7 +104,22 @@ app.get('/users/:username', async (req, res) => {
   const friendCount = await Friendship.count({
     where: { [Op.or]: [{ userId1: profileUser.id }, { userId2: profileUser.id }] },
   });
-  res.render('profile', { profileUser, friendCount });
+  const isFriend = await Friendship.findOne({ where: { [Op.or]: [{ userId1: req.session.user.id, userId2: profileUser.id }, { userId1: profileUser.id, userId2: req.session.user.id }] } });
+  const pendingRequest = await FriendRequest.findOne({ where: { fromUserId: req.session.user.id, toUserId: profileUser.id, status: 'pending' } });
+  const blocks = await Block.findAll({ where: { [Op.or]: [{ blockerUserId: req.session.user.id, blockedUserId: profileUser.id }, { blockerUserId: profileUser.id, blockedUserId: req.session.user.id }] } });
+  const blockApplied = blocks.find((b) => b.blockerUserId === req.session.user.id);
+  const blockedByThem = blocks.find((b) => b.blockerUserId === profileUser.id);
+  const fileWhere = {
+    ownerUserId: profileUser.id,
+    [Op.or]: [
+      { visibility: 'public' },
+      { visibility: 'unlisted' },
+      { ownerUserId: req.session.user.id },
+    ],
+  };
+  if (req.session.user.role === 'ADMIN') delete fileWhere[Op.or];
+  const uploads = await File.findAll({ where: fileWhere, order: [['createdAt', 'DESC']] });
+  res.render('profile', { profileUser, friendCount, isFriend, pendingRequest, blockApplied, blockedByThem, uploads });
 });
 
 app.get('/account', async (req, res) => {
