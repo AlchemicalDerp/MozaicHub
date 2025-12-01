@@ -24,7 +24,20 @@
   const notifBadge = document.getElementById('notifBadge');
   const notifWrap = document.querySelector('.notification-wrap');
   let unreadIds = [];
+  const seenIds = new Set();
+  let panelIds = [];
   let notifOpen = false;
+
+  function updateBadge(count) {
+    if (!notifBadge) return;
+    if (count > 0) {
+      notifBadge.textContent = count;
+      notifBadge.style.display = 'inline-block';
+    } else {
+      notifBadge.textContent = '';
+      notifBadge.style.display = 'none';
+    }
+  }
 
   function renderNotifications(items) {
     if (!notifList) return;
@@ -39,6 +52,7 @@
     items.forEach((n) => {
       const li = document.createElement('li');
       li.className = n.readAt ? '' : 'unread';
+      li.dataset.id = n.id;
       li.innerHTML = `<div>${n.message}</div><div class="meta">${new Date(n.createdAt).toLocaleString()}</div>`;
       if (n.link) {
         const link = document.createElement('a');
@@ -47,9 +61,25 @@
         link.className = 'small';
         link.style.display = 'inline-block';
         link.style.marginTop = '6px';
+        link.addEventListener('click', () => markNotificationSeen(n.id, li));
         li.appendChild(link);
       }
+      li.addEventListener('click', () => markNotificationSeen(n.id, li));
       notifList.appendChild(li);
+    });
+  }
+
+  async function markNotificationSeen(id, element) {
+    seenIds.add(id);
+    if (unreadIds.includes(id)) {
+      unreadIds = unreadIds.filter((value) => value !== id);
+      updateBadge(unreadIds.length);
+    }
+    element?.classList.remove('unread');
+    await fetch('/notifications/mark-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: [id] }),
     });
   }
 
@@ -58,22 +88,29 @@
     const res = await fetch('/notifications/panel');
     if (!res.ok) return;
     const data = await res.json();
+    panelIds = data.map((n) => n.id);
     unreadIds = data.filter((n) => !n.readAt).map((n) => n.id);
+    updateBadge(unreadIds.length);
     renderNotifications(data);
   }
 
   async function clearSeenNotifications() {
-    if (!unreadIds.length) return;
+    const ids = [...new Set([...panelIds, ...Array.from(seenIds)])];
+    if (!ids.length) return;
     await fetch('/notifications/mark-read', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: unreadIds }),
+      body: JSON.stringify({ ids }),
+    });
+    await fetch('/notifications/clear-seen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
     });
     unreadIds = [];
-    if (notifBadge) {
-      notifBadge.textContent = '';
-      notifBadge.style.display = 'none';
-    }
+    seenIds.clear();
+    panelIds = [];
+    updateBadge(0);
     if (notifList) {
       notifList.innerHTML = '';
     }
