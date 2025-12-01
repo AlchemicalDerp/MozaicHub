@@ -133,7 +133,7 @@ body { font-family: Arial, sans-serif; margin: 0; background: #0f1115; color: #e
 }
 .theme-light .media-stage { background: #f0f2f8; }
 body.theme-light { background: #f6f7fb; color: #1b1f2a; }
-.theme-light .muted, .theme-light .meta { color: #4c566a; }
+.theme-light .muted, .theme-light .meta { color: #2f3b52; }
 .theme-light .button.secondary { color: #1b1f2a; border-color: #cbd2e1; }
 .theme-light .placeholder { background: #dfe3ed; color: #4c566a; }
 .theme-light .ghost { border-color: #cbd2e1; color: #1b1f2a; background: #fff; }
@@ -157,7 +157,9 @@ body.theme-light { background: #f6f7fb; color: #1b1f2a; }
 .theme-light .notification-panel li { background: #f6f7fb; border-color: #cbd2e1; }
 .theme-light .thread-card { background: #fff; border-color: #cbd2e1; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .theme-light .thread-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+.theme-light .thread-body, .theme-light .thread-preview { color: #2f3b52; }
 .theme-light .toast { background: #fff; color: #1b1f2a; border-color: #6d5dfc; }
 .theme-light .toggle { background: #fff; border-color: #cbd2e1; color: #1b1f2a; }
 .theme-light .toggle-track { background: #cbd2e1; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); }
 .theme-light .toggle-thumb { box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+.theme-light .pill { background: #e9ecf5; color: #1b1f2a; }
