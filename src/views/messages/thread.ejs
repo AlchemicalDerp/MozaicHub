@@ -1,15 +1,26 @@
 <%- include('../partials/header') %>
 <div class="chat-shell">
   <div class="chat-header">
-    <h2>Conversation with <%= peer.displayName %></h2>
+    <div>
+      <p class="meta">Conversation</p>
+      <h2><%= peer.displayName %></h2>
+    </div>
+    <div class="pill">Messages refresh automatically</div>
   </div>
   <div id="chatWindow" class="chat-window">
     <% messages.forEach(m => { %>
       <div class="bubble <%= m.fromUserId === user.id ? 'me' : 'them' %>">
         <div class="bubble-meta"><%= new Date(m.createdAt).toLocaleString() %></div>
         <div class="bubble-body"><%- m.renderedText %></div>
+        <% if (m.fromUserId === user.id) { %>
+          <div class="bubble-status"><%= m.readAt ? 'Seen' : 'Delivered' %></div>
+        <% } %>
       </div>
     <% }) %>
+  </div>
+  <div id="newMessageToast" class="toast hidden">
+    <span>New messages arrived</span>
+    <button type="button" class="button secondary" id="jumpToLatest">Jump to latest</button>
   </div>
   <form id="chatForm" class="chat-form" method="post" action="/messages/thread/<%= peerId %>">
     <textarea name="text" id="chatInput" required placeholder="Write a message..." rows="3"></textarea>
@@ -23,8 +34,19 @@
   const chatForm = document.getElementById('chatForm');
   const chatInput = document.getElementById('chatInput');
   const peerId = '<%= peerId %>';
+  const toast = document.getElementById('newMessageToast');
+  const jumpButton = document.getElementById('jumpToLatest');
+  let currentMessages = <%- JSON.stringify(messages) %>;
 
-  function renderMessages(list) {
+  function isNearBottom() {
+    const distance = chatWindow.scrollHeight - chatWindow.scrollTop - chatWindow.clientHeight;
+    return distance < 24;
+  }
+
+  function renderMessages(list, { fromSend = false } = {}) {
+    const wasNearBottom = isNearBottom();
+    const previousHeight = chatWindow.scrollHeight;
+    const previousTop = chatWindow.scrollTop;
     chatWindow.innerHTML = '';
     list.forEach((m) => {
       const bubble = document.createElement('div');
@@ -37,16 +59,33 @@
       body.innerHTML = m.renderedText;
       bubble.appendChild(meta);
       bubble.appendChild(body);
+      if (m.fromUserId === <%- user.id %>) {
+        const status = document.createElement('div');
+        status.className = 'bubble-status';
+        status.textContent = m.readAt ? 'Seen' : 'Delivered';
+        bubble.appendChild(status);
+      }
       chatWindow.appendChild(bubble);
     });
-    chatWindow.scrollTop = chatWindow.scrollHeight;
+    if (wasNearBottom || fromSend) {
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+      toast.classList.add('hidden');
+    } else {
+      const newTop = chatWindow.scrollHeight - (previousHeight - previousTop);
+      chatWindow.scrollTop = Math.max(newTop, 0);
+    }
+    currentMessages = list;
   }
 
   async function refreshMessages() {
     const res = await fetch(`/messages/thread/${peerId}/data`);
     if (!res.ok) return;
     const data = await res.json();
+    const gotNewMessage = data.length > currentMessages.length;
     renderMessages(data);
+    if (gotNewMessage && !isNearBottom()) {
+      toast.classList.remove('hidden');
+    }
   }
 
   chatForm.addEventListener('submit', async (e) => {
@@ -60,13 +99,18 @@
     });
     if (res.ok) {
       const data = await res.json();
-      renderMessages(data);
+      renderMessages(data, { fromSend: true });
       chatInput.value = '';
       chatInput.focus();
     }
   });
 
+  jumpButton.addEventListener('click', () => {
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    toast.classList.add('hidden');
+  });
+
   setInterval(refreshMessages, 3000);
-  refreshMessages();
+  renderMessages(currentMessages, { fromSend: true });
 </script>
 <%- include('../partials/footer') %>

@@ -10,8 +10,10 @@
   <h3>Add friend</h3>
   <form method="get" action="/friends" class="search-row">
     <input type="text" name="search" value="<%= search %>" placeholder="Search by username or display name" required />
-    <label class="checkbox">
-      <input type="checkbox" name="fuzzy" <%= fuzzy ? 'checked' : '' %> /> Fuzzy search
+    <label class="toggle" for="fuzzySearch">
+      <input id="fuzzySearch" type="checkbox" name="fuzzy" <%= fuzzy ? 'checked' : '' %> />
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      <span class="toggle-label">Fuzzy search</span>
     </label>
     <button type="submit">Search</button>
   </form>

@@ -3,6 +3,9 @@
 <head>
   <title>MozaicHub</title>
   <link rel="stylesheet" href="/public/css/style.css" />
+  <link rel="icon" type="image/png" href="/public/favicon.png" />
+  <link rel="icon" type="image/x-icon" href="/public/favicon.ico" />
+  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png" />
 </head>
 <body class="theme-dark">
 <nav class="topnav">
@@ -17,12 +20,25 @@
       <a href="/admin">Admin</a>
     <% } %>
     <button class="ghost" id="themeToggle" type="button">Toggle Theme</button>
-    <a href="/notifications" class="notification-icon">
-      <% if (unreadNotifications > 0) { %>
-        <span class="badge"><%= unreadNotifications %></span>
-      <% } %>
-      🔔
-    </a>
+    <div class="notification-wrap">
+      <button type="button" id="notifToggle" class="notification-icon">
+        <% if (unreadNotifications > 0) { %>
+          <span class="badge" id="notifBadge"><%= unreadNotifications %></span>
+        <% } else { %>
+          <span class="badge" id="notifBadge" style="display: none;"></span>
+        <% } %>
+        🔔
+      </button>
+      <div id="notifPanel" class="notification-panel">
+        <div class="panel-head">
+          <h4>Notifications</h4>
+          <a class="small" href="/notifications">Open center</a>
+        </div>
+        <ul id="notifList">
+          <li class="meta">Loading…</li>
+        </ul>
+      </div>
+    </div>
     <div class="avatar-link badge-anchor">
       <% if (unreadNotifications > 0) { %>
         <span class="badge-dot"></span>
