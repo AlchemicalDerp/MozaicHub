@@ -1,8 +1,38 @@
 <%- include('../partials/header') %>
-<h2>Messages</h2>
-<ul>
-  <% threads.forEach(t => { const peer = t.userId1 === user.id ? t.user2 : t.user1; %>
-    <li><a href="/messages/thread/<%= peer ? peer.id : '' %>">Conversation with <%= peer ? peer.displayName : 'Unknown' %></a></li>
+<div class="section-head">
+  <div>
+    <p class="meta">Inbox</p>
+    <h2>Messages</h2>
+  </div>
+  <a class="button secondary" href="/friends">Start a new chat</a>
+</div>
+
+<div class="thread-grid">
+  <% if (!threads.length) { %>
+    <div class="empty-state card">No conversations yet.</div>
+  <% } %>
+  <% threads.forEach((t) => { %>
+    <a class="thread-card" href="/messages/thread/<%= t.peer ? t.peer.id : '' %>">
+      <div class="thread-top">
+        <div>
+          <p class="meta">Chat with</p>
+          <h3><%= t.peer ? t.peer.displayName : 'Unknown user' %></h3>
+        </div>
+        <% if (t.unreadCount > 0) { %>
+          <span class="pill pill-alert"><%= t.unreadCount %> new</span>
+        <% } else { %>
+          <span class="pill">Up to date</span>
+        <% } %>
+      </div>
+      <div class="thread-body">
+        <% if (t.lastMessage) { %>
+          <p class="thread-preview"><strong><%= t.lastMessage.fromUserId === user.id ? 'You' : (t.peer ? t.peer.displayName : 'They') %>:</strong> <%= (t.lastMessage.text || '').substring(0, 140) %><% if ((t.lastMessage.text || '').length > 140) { %>…<% } %></p>
+          <p class="meta"><%= new Date(t.lastMessage.createdAt).toLocaleString() %></p>
+        <% } else { %>
+          <p class="meta">No messages yet.</p>
+        <% } %>
+      </div>
+    </a>
   <% }) %>
-</ul>
+</div>
 <%- include('../partials/footer') %>
