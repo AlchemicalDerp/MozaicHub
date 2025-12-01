@@ -104,45 +104,6 @@ router.post('/', (req, res, next) => {
   });
 });
 
-router.get('/:id', async (req, res) => {
-  const file = await File.findByPk(req.params.id, {
-    include: [
-      { model: User, as: 'owner' },
-      { model: Comment, include: ['author'], order: [['createdAt', 'ASC']] },
-    ],
-  });
-  if (!file) return res.status(404).render('404');
-  const allowed = await FileAccess.findOne({ where: { fileId: file.id, userId: req.session.user.id } });
-  const canView =
-    file.visibility === 'public' ||
-    file.visibility === 'unlisted' ||
-    file.ownerUserId === req.session.user.id ||
-    req.session.user.role === 'ADMIN' ||
-    Boolean(allowed);
-  if (!canView) return res.status(403).send('Forbidden');
-  const commentError = req.session.commentError;
-  req.session.commentError = null;
-  const commentModels = await Comment.findAll({
-    where: { fileId: file.id },
-    include: ['author'],
-    order: [['createdAt', 'ASC']],
-  });
-  const mapped = commentModels.map((c) => {
-    const raw = c.toJSON();
-    return { ...raw, renderedText: renderMarkdown(c.text, (username) => `/users/${username}`), replies: [] };
-  });
-  const byId = new Map(mapped.map((c) => [c.id, c]));
-  const roots = [];
-  mapped.forEach((comment) => {
-    if (comment.parentCommentId && byId.has(comment.parentCommentId)) {
-      byId.get(comment.parentCommentId).replies.push(comment);
-    } else {
-      roots.push(comment);
-    }
-  });
-  res.render('files/detail', { file: { ...file.toJSON(), Comments: roots }, commentError });
-});
-
 router.get('/:id/edit', async (req, res) => {
   const file = await File.findByPk(req.params.id, { include: [{ model: User, as: 'allowedUsers' }] });
   if (!file) return res.status(404).render('404');
@@ -185,6 +146,45 @@ router.put('/:id', async (req, res) => {
   }
 
   res.redirect(`/files/${file.id}`);
+});
+
+router.get('/:id', async (req, res) => {
+  const file = await File.findByPk(req.params.id, {
+    include: [
+      { model: User, as: 'owner' },
+      { model: Comment, include: ['author'], order: [['createdAt', 'ASC']] },
+    ],
+  });
+  if (!file) return res.status(404).render('404');
+  const allowed = await FileAccess.findOne({ where: { fileId: file.id, userId: req.session.user.id } });
+  const canView =
+    file.visibility === 'public' ||
+    file.visibility === 'unlisted' ||
+    file.ownerUserId === req.session.user.id ||
+    req.session.user.role === 'ADMIN' ||
+    Boolean(allowed);
+  if (!canView) return res.status(403).send('Forbidden');
+  const commentError = req.session.commentError;
+  req.session.commentError = null;
+  const commentModels = await Comment.findAll({
+    where: { fileId: file.id },
+    include: ['author'],
+    order: [['createdAt', 'ASC']],
+  });
+  const mapped = commentModels.map((c) => {
+    const raw = c.toJSON();
+    return { ...raw, renderedText: renderMarkdown(c.text, (username) => `/users/${username}`), replies: [] };
+  });
+  const byId = new Map(mapped.map((c) => [c.id, c]));
+  const roots = [];
+  mapped.forEach((comment) => {
+    if (comment.parentCommentId && byId.has(comment.parentCommentId)) {
+      byId.get(comment.parentCommentId).replies.push(comment);
+    } else {
+      roots.push(comment);
+    }
+  });
+  res.render('files/detail', { file: { ...file.toJSON(), Comments: roots }, commentError });
 });
 
 router.get('/:id/download', async (req, res) => {
