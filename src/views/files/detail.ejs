@@ -12,7 +12,12 @@
       <a class="muted" href="/users/<%= file.owner.username %>">Uploaded by <%= file.owner.displayName %></a>
     </div>
     <p class="muted"><%= file.description %></p>
-    <a class="button" href="/files/<%= file.id %>/download">Download</a>
+    <div class="button-row">
+      <a class="button" href="/files/<%= file.id %>/download">Download</a>
+      <% if (file.ownerUserId === user.id || user.role === 'ADMIN') { %>
+        <a class="button ghost" href="/files/<%= file.id %>/edit">Edit</a>
+      <% } %>
+    </div>
   </div>
   <div class="media-stage">
     <% if (file.fileCategory === 'audio') { %>

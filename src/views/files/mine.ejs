@@ -6,9 +6,12 @@
     <li class="card">
       <a class="title" href="/files/<%= file.id %>"><%= file.title %></a>
       <div class="meta"><%= file.visibility %> • <%= (file.sizeBytes/1024/1024).toFixed(2) %> MB</div>
-      <form action="/files/<%= file.id %>?_method=DELETE" method="post">
-        <button type="submit">Delete</button>
-      </form>
+      <div class="button-row">
+        <a class="button ghost" href="/files/<%= file.id %>/edit">Edit</a>
+        <form action="/files/<%= file.id %>?_method=DELETE" method="post">
+          <button type="submit">Delete</button>
+        </form>
+      </div>
     </li>
   <% }) %>
 </ul>

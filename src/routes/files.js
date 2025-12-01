@@ -143,6 +143,50 @@ router.get('/:id', async (req, res) => {
   res.render('files/detail', { file: { ...file.toJSON(), Comments: roots }, commentError });
 });
 
+router.get('/:id/edit', async (req, res) => {
+  const file = await File.findByPk(req.params.id, { include: [{ model: User, as: 'allowedUsers' }] });
+  if (!file) return res.status(404).render('404');
+  if (file.ownerUserId !== req.session.user.id && req.session.user.role !== 'ADMIN') {
+    return res.status(403).send('Forbidden');
+  }
+
+  const allowedUsernames = (file.allowedUsers || []).map((u) => u.username).join(',');
+  res.render('files/edit', { file, allowedUsernames });
+});
+
+router.put('/:id', async (req, res) => {
+  const file = await File.findByPk(req.params.id);
+  if (!file) return res.status(404).send('Not found');
+  if (file.ownerUserId !== req.session.user.id && req.session.user.role !== 'ADMIN') {
+    return res.status(403).send('Forbidden');
+  }
+
+  const { title, description, visibility } = req.body;
+  const trimmedTitle = title ? title.trim() : '';
+  if (!trimmedTitle) {
+    return res.status(400).send('Title is required');
+  }
+
+  const nextVisibility = ['public', 'private', 'unlisted'].includes(visibility) ? visibility : file.visibility;
+  await file.update({ title: trimmedTitle, description, visibility: nextVisibility });
+
+  if (nextVisibility === 'private') {
+    const usernames = (req.body.allowedUsernames || '')
+      .split(',')
+      .map((u) => u.trim())
+      .filter(Boolean);
+    const allowedUsers = usernames.length ? await User.findAll({ where: { username: { [Op.in]: usernames } } }) : [];
+    await FileAccess.destroy({ where: { fileId: file.id } });
+    if (allowedUsers.length) {
+      await FileAccess.bulkCreate(allowedUsers.map((u) => ({ fileId: file.id, userId: u.id })), { ignoreDuplicates: true });
+    }
+  } else {
+    await FileAccess.destroy({ where: { fileId: file.id } });
+  }
+
+  res.redirect(`/files/${file.id}`);
+});
+
 router.get('/:id/download', async (req, res) => {
   const file = await File.findByPk(req.params.id);
   if (!file) return res.status(404).send('Not found');
