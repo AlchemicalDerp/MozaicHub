@@ -88,6 +88,9 @@ body { font-family: Arial, sans-serif; margin: 0; background: #0f1115; color: #e
 .reply-form { margin: 8px 0 0 44px; display: flex; flex-direction: column; gap: 6px; max-width: 620px; background: #0f1118; border: 1px solid #2a3040; padding: 8px; border-radius: 10px; }
 .reply-form textarea { width: 100%; min-height: 60px; background: transparent; color: inherit; border: 1px solid #2a3040; border-radius: 8px; padding: 8px; box-sizing: border-box; }
 .reply-form button { align-self: flex-end; }
+.reply-form.reply-collapsed { background: transparent; border-color: transparent; padding: 0; gap: 0; }
+.reply-form.reply-collapsed textarea { display: none; }
+.reply-form.reply-collapsed button { align-self: flex-start; }
 .notification-icon { position: relative; text-decoration: none; color: inherit; }
 .notification-wrap { position: relative; }
 .badge { position: absolute; top: -6px; right: -10px; background: #ff4d4f; color: #fff; padding: 2px 6px; border-radius: 999px; font-size: 11px; font-weight: 700; }
