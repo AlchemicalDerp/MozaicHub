@@ -8,7 +8,7 @@
       <div class="meta"><%= file.visibility %> • <%= (file.sizeBytes/1024/1024).toFixed(2) %> MB</div>
       <div class="button-row">
         <a class="button ghost" href="/files/<%= file.id %>/edit">Edit</a>
-        <form action="/files/<%= file.id %>?_method=DELETE" method="post">
+        <form action="/files/<%= file.id %>?_method=DELETE" method="post" data-confirm="Are you sure you want to delete '<%= file.title %>'? This action cannot be undone.">
           <button type="submit">Delete</button>
         </form>
       </div>

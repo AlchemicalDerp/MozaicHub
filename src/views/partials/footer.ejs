@@ -8,6 +8,15 @@
     if (!isDark) { body.classList.add('theme-light'); localStorage.setItem('theme', 'light'); }
     else { body.classList.remove('theme-light'); localStorage.setItem('theme', 'dark'); }
   });
+
+  document.querySelectorAll('form[data-confirm]').forEach(form => {
+    form.addEventListener('submit', (event) => {
+      const message = form.getAttribute('data-confirm') || 'Are you sure you want to continue?';
+      if (!confirm(message)) {
+        event.preventDefault();
+      }
+    });
+  });
 </script>
 </div>
 </body>
