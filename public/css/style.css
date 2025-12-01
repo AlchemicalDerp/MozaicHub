@@ -158,6 +158,8 @@ body.theme-light { background: #f6f7fb; color: #1b1f2a; }
 .theme-light .thread-card { background: #fff; border-color: #cbd2e1; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .theme-light .thread-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
 .theme-light .thread-body, .theme-light .thread-preview { color: #2f3b52; }
+.theme-light a.title, .theme-light .title { color: #0f172a; }
+.theme-light a.title:hover, .theme-light .title:hover { color: #0b4abf; }
 .theme-light .toast { background: #fff; color: #1b1f2a; border-color: #6d5dfc; }
 .theme-light .toggle { background: #fff; border-color: #cbd2e1; color: #1b1f2a; }
 .theme-light .toggle-track { background: #cbd2e1; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); }
