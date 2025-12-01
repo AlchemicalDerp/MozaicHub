@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const { Op } = require('sequelize');
-const { File, User, FileAccess, Comment, Notification, Friendship } = require('../models');
+const { sequelize, File, User, FileAccess, Comment, Notification, Friendship } = require('../models');
 const config = require('../config');
 const { uploadMiddleware } = require('../storage/localStorage');
 const { categorizeFile } = require('../utils/fileCategory');
@@ -207,12 +207,22 @@ router.delete('/:id', async (req, res) => {
   if (file.ownerUserId !== req.session.user.id && req.session.user.role !== 'ADMIN') {
     return res.status(403).send('Forbidden');
   }
-  if (file.ownerUserId === req.session.user.id) {
-    const user = await User.findByPk(req.session.user.id);
-    await user.update({ storageUsedBytes: Number(user.storageUsedBytes) - Number(file.sizeBytes) });
-  }
-  file.destroy();
-  res.redirect('/files/mine');
+
+  await sequelize.transaction(async (t) => {
+    await Comment.destroy({ where: { fileId: file.id }, transaction: t });
+    await FileAccess.destroy({ where: { fileId: file.id }, transaction: t });
+
+    const owner = await User.findByPk(file.ownerUserId, { transaction: t });
+    if (owner) {
+      const nextUsage = Math.max(0, Number(owner.storageUsedBytes) - Number(file.sizeBytes));
+      await owner.update({ storageUsedBytes: nextUsage }, { transaction: t });
+    }
+
+    await file.destroy({ transaction: t });
+  });
+
+  const redirectPath = file.ownerUserId === req.session.user.id ? '/files/mine' : '/files';
+  res.redirect(redirectPath);
 });
 
 module.exports = router;
