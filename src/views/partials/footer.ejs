@@ -17,6 +17,91 @@
       }
     });
   });
+
+  const notifToggle = document.getElementById('notifToggle');
+  const notifPanel = document.getElementById('notifPanel');
+  const notifList = document.getElementById('notifList');
+  const notifBadge = document.getElementById('notifBadge');
+  const notifWrap = document.querySelector('.notification-wrap');
+  let unreadIds = [];
+  let notifOpen = false;
+
+  function renderNotifications(items) {
+    if (!notifList) return;
+    notifList.innerHTML = '';
+    if (!items.length) {
+      const empty = document.createElement('li');
+      empty.className = 'meta';
+      empty.textContent = 'Nothing new right now.';
+      notifList.appendChild(empty);
+      return;
+    }
+    items.forEach((n) => {
+      const li = document.createElement('li');
+      li.className = n.readAt ? '' : 'unread';
+      li.innerHTML = `<div>${n.message}</div><div class="meta">${new Date(n.createdAt).toLocaleString()}</div>`;
+      if (n.link) {
+        const link = document.createElement('a');
+        link.href = n.link;
+        link.textContent = 'Open';
+        link.className = 'small';
+        link.style.display = 'inline-block';
+        link.style.marginTop = '6px';
+        li.appendChild(link);
+      }
+      notifList.appendChild(li);
+    });
+  }
+
+  async function loadNotifications() {
+    if (!notifList) return;
+    const res = await fetch('/notifications/panel');
+    if (!res.ok) return;
+    const data = await res.json();
+    unreadIds = data.filter((n) => !n.readAt).map((n) => n.id);
+    renderNotifications(data);
+  }
+
+  async function clearSeenNotifications() {
+    if (!unreadIds.length) return;
+    await fetch('/notifications/mark-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: unreadIds }),
+    });
+    unreadIds = [];
+    if (notifBadge) {
+      notifBadge.textContent = '';
+      notifBadge.style.display = 'none';
+    }
+    if (notifList) {
+      notifList.innerHTML = '';
+    }
+  }
+
+  function closePanel(markSeen = true) {
+    if (!notifPanel || !notifOpen) return;
+    notifPanel.classList.remove('visible');
+    notifOpen = false;
+    if (markSeen) clearSeenNotifications();
+  }
+
+  notifToggle?.addEventListener('click', async (event) => {
+    event.stopPropagation();
+    if (notifOpen) {
+      closePanel(true);
+      return;
+    }
+    notifOpen = true;
+    notifPanel?.classList.add('visible');
+    await loadNotifications();
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!notifOpen) return;
+    if (notifWrap && notifWrap.contains(event.target)) return;
+    closePanel(true);
+  });
 </script>
 </div>
 </body>
