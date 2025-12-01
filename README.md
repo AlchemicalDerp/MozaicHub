@@ -2,6 +2,9 @@
 
 MozaicHub is a simple full-stack file hosting and media server built with Node.js, Express, Sequelize, SQLite, and EJS. The app supports user authentication, file uploads with previews, comments, friendships, messaging, and admin moderation tooling.
 
+## Edit Ticker
+- Total committed README updates: 1
+
 ## Features
 - Session-based authentication with bcrypt password hashing.
 - Admin-only account creation, banning with graylist tracking, and configurable per-user storage quotas.
