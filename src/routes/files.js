@@ -1,4 +1,5 @@
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
 const { sequelize, File, User, FileAccess, Comment, Notification, Friendship } = require('../models');
@@ -8,6 +9,47 @@ const { categorizeFile } = require('../utils/fileCategory');
 const { renderMarkdown } = require('../utils/markdown');
 
 const router = express.Router();
+
+async function normalizeStoredFilenames() {
+  const files = await File.findAll();
+  await Promise.all(
+    files.map(async (file) => {
+      if (!file.storedFilename) {
+        console.warn(`Skipping filename normalization for id ${file.id} due to missing stored filename`);
+        return;
+      }
+
+      // If the file is already stored as `<id>.<ext>`, leave it alone so existing links remain valid.
+      const idPattern = new RegExp(`^${file.id}(\.[^.]+)?$`);
+      if (idPattern.test(file.storedFilename)) return;
+
+      const storedExt = path.extname(file.storedFilename);
+      const originalExt = path.extname(file.originalFilename || '');
+      const extToUse = originalExt || storedExt;
+      const expected = `${file.id}${extToUse}`;
+      if (!expected) return;
+
+      const currentPath = path.join(config.uploadsDir, file.storedFilename);
+      const targetPath = path.join(config.uploadsDir, expected);
+
+      try {
+        await fs.promises.access(currentPath);
+      } catch (err) {
+        console.error(`Stored file missing on disk for id ${file.id}:`, err);
+        return;
+      }
+
+      try {
+        await fs.promises.rename(currentPath, targetPath);
+        await file.update({ storedFilename: expected });
+      } catch (err) {
+        console.error(`Failed to normalize filename for id ${file.id}:`, err);
+      }
+    })
+  );
+}
+
+normalizeStoredFilenames().catch((err) => console.error('Failed to normalize stored filenames', err));
 
 async function friendIdsForUser(userId) {
   const friendships = await Friendship.findAll({ where: { [Op.or]: [{ userId1: userId }, { userId2: userId }] } });
@@ -66,17 +108,33 @@ router.post('/', (req, res, next) => {
       return res.status(400).send('Storage quota exceeded');
     }
     const category = categorizeFile(file.originalname, file.mimetype);
+    const tempFilename = file.filename;
     const fileRecord = await File.create({
       ownerUserId: userId,
       title,
       description,
       originalFilename: file.originalname,
-      storedFilename: file.filename,
+      storedFilename: tempFilename,
       mimeType: file.mimetype,
       fileCategory: category,
       sizeBytes: file.size,
       visibility: visibility || 'private',
     });
+
+    const originalExt = path.extname(fileRecord.originalFilename || file.originalname || '');
+    const storedExt = path.extname(tempFilename);
+    const extensionToUse = originalExt || storedExt;
+    const newStoredFilename = `${fileRecord.id}${extensionToUse}`;
+    if (newStoredFilename !== tempFilename) {
+      const currentPath = path.join(config.uploadsDir, tempFilename);
+      const nextPath = path.join(config.uploadsDir, newStoredFilename);
+      try {
+        await fs.promises.rename(currentPath, nextPath);
+        await fileRecord.update({ storedFilename: newStoredFilename });
+      } catch (err) {
+        console.error('Failed to rename uploaded file to id-based name', err);
+      }
+    }
     if (visibility === 'private' && req.body.allowedUsernames) {
       const usernames = req.body.allowedUsernames
         .split(',')
