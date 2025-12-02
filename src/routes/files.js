@@ -14,8 +14,20 @@ async function normalizeStoredFilenames() {
   const files = await File.findAll();
   await Promise.all(
     files.map(async (file) => {
-      const expected = `${file.id}${path.extname(file.originalFilename || '')}`;
-      if (file.storedFilename === expected) return;
+      if (!file.storedFilename) {
+        console.warn(`Skipping filename normalization for id ${file.id} due to missing stored filename`);
+        return;
+      }
+
+      // If the file is already stored as `<id>.<ext>`, leave it alone so existing links remain valid.
+      const idPattern = new RegExp(`^${file.id}(\.[^.]+)?$`);
+      if (idPattern.test(file.storedFilename)) return;
+
+      const storedExt = path.extname(file.storedFilename);
+      const originalExt = path.extname(file.originalFilename || '');
+      const extToUse = originalExt || storedExt;
+      const expected = `${file.id}${extToUse}`;
+      if (!expected) return;
 
       const currentPath = path.join(config.uploadsDir, file.storedFilename);
       const targetPath = path.join(config.uploadsDir, expected);
