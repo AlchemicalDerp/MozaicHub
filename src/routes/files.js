@@ -121,7 +121,10 @@ router.post('/', (req, res, next) => {
       visibility: visibility || 'private',
     });
 
-    const newStoredFilename = `${fileRecord.id}${path.extname(file.originalFilename)}`;
+    const originalExt = path.extname(fileRecord.originalFilename || file.originalname || '');
+    const storedExt = path.extname(tempFilename);
+    const extensionToUse = originalExt || storedExt;
+    const newStoredFilename = `${fileRecord.id}${extensionToUse}`;
     if (newStoredFilename !== tempFilename) {
       const currentPath = path.join(config.uploadsDir, tempFilename);
       const nextPath = path.join(config.uploadsDir, newStoredFilename);
