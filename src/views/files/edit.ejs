@@ -1,0 +1,30 @@
+<%- include('../partials/header') %>
+<h2>Edit File</h2>
+<form method="post" action="/files/<%= file.id %>?_method=PUT" class="form-card">
+  <label>Title</label>
+  <input type="text" name="title" value="<%= file.title %>" required />
+  <label>Description</label>
+  <textarea name="description"><%= file.description || '' %></textarea>
+  <label>Visibility</label>
+  <select name="visibility">
+    <option value="public" <%= file.visibility === 'public' ? 'selected' : '' %>>Public</option>
+    <option value="unlisted" <%= file.visibility === 'unlisted' ? 'selected' : '' %>>Unlisted</option>
+    <option value="private" <%= file.visibility === 'private' ? 'selected' : '' %>>Private</option>
+  </select>
+  <div id="allowedUsers" style="display:none;">
+    <label>Allowed users (usernames, comma separated)</label>
+    <input type="text" name="allowedUsernames" value="<%= allowedUsernames %>" placeholder="alice,bob,charlie" />
+    <p class="muted small">Only used for private files.</p>
+  </div>
+  <button type="submit">Save changes</button>
+</form>
+<script>
+  const visibilitySelect = document.querySelector('select[name="visibility"]');
+  const allowedUsers = document.getElementById('allowedUsers');
+  function toggleAllowed() {
+    allowedUsers.style.display = visibilitySelect.value === 'private' ? 'block' : 'none';
+  }
+  visibilitySelect.addEventListener('change', toggleAllowed);
+  toggleAllowed();
+</script>
+<%- include('../partials/footer') %>

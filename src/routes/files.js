@@ -1,13 +1,43 @@
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
-const { File, User, FileAccess, Comment, Notification, Friendship } = require('../models');
+const { sequelize, File, User, FileAccess, Comment, Notification, Friendship } = require('../models');
 const config = require('../config');
 const { uploadMiddleware } = require('../storage/localStorage');
 const { categorizeFile } = require('../utils/fileCategory');
 const { renderMarkdown } = require('../utils/markdown');
 
 const router = express.Router();
+
+async function normalizeStoredFilenames() {
+  const files = await File.findAll();
+  await Promise.all(
+    files.map(async (file) => {
+      const expected = `${file.id}${path.extname(file.originalFilename || '')}`;
+      if (file.storedFilename === expected) return;
+
+      const currentPath = path.join(config.uploadsDir, file.storedFilename);
+      const targetPath = path.join(config.uploadsDir, expected);
+
+      try {
+        await fs.promises.access(currentPath);
+      } catch (err) {
+        console.error(`Stored file missing on disk for id ${file.id}:`, err);
+        return;
+      }
+
+      try {
+        await fs.promises.rename(currentPath, targetPath);
+        await file.update({ storedFilename: expected });
+      } catch (err) {
+        console.error(`Failed to normalize filename for id ${file.id}:`, err);
+      }
+    })
+  );
+}
+
+normalizeStoredFilenames().catch((err) => console.error('Failed to normalize stored filenames', err));
 
 async function friendIdsForUser(userId) {
   const friendships = await Friendship.findAll({ where: { [Op.or]: [{ userId1: userId }, { userId2: userId }] } });
@@ -66,17 +96,30 @@ router.post('/', (req, res, next) => {
       return res.status(400).send('Storage quota exceeded');
     }
     const category = categorizeFile(file.originalname, file.mimetype);
+    const tempFilename = file.filename;
     const fileRecord = await File.create({
       ownerUserId: userId,
       title,
       description,
       originalFilename: file.originalname,
-      storedFilename: file.filename,
+      storedFilename: tempFilename,
       mimeType: file.mimetype,
       fileCategory: category,
       sizeBytes: file.size,
       visibility: visibility || 'private',
     });
+
+    const newStoredFilename = `${fileRecord.id}${path.extname(file.originalFilename)}`;
+    if (newStoredFilename !== tempFilename) {
+      const currentPath = path.join(config.uploadsDir, tempFilename);
+      const nextPath = path.join(config.uploadsDir, newStoredFilename);
+      try {
+        await fs.promises.rename(currentPath, nextPath);
+        await fileRecord.update({ storedFilename: newStoredFilename });
+      } catch (err) {
+        console.error('Failed to rename uploaded file to id-based name', err);
+      }
+    }
     if (visibility === 'private' && req.body.allowedUsernames) {
       const usernames = req.body.allowedUsernames
         .split(',')
@@ -102,6 +145,50 @@ router.post('/', (req, res, next) => {
     );
     res.redirect(`/files/${fileRecord.id}`);
   });
+});
+
+router.get('/:id/edit', async (req, res) => {
+  const file = await File.findByPk(req.params.id, { include: [{ model: User, as: 'allowedUsers' }] });
+  if (!file) return res.status(404).render('404');
+  if (file.ownerUserId !== req.session.user.id && req.session.user.role !== 'ADMIN') {
+    return res.status(403).send('Forbidden');
+  }
+
+  const allowedUsernames = (file.allowedUsers || []).map((u) => u.username).join(',');
+  res.render('files/edit', { file, allowedUsernames });
+});
+
+router.put('/:id', async (req, res) => {
+  const file = await File.findByPk(req.params.id);
+  if (!file) return res.status(404).send('Not found');
+  if (file.ownerUserId !== req.session.user.id && req.session.user.role !== 'ADMIN') {
+    return res.status(403).send('Forbidden');
+  }
+
+  const { title, description, visibility } = req.body;
+  const trimmedTitle = title ? title.trim() : '';
+  if (!trimmedTitle) {
+    return res.status(400).send('Title is required');
+  }
+
+  const nextVisibility = ['public', 'private', 'unlisted'].includes(visibility) ? visibility : file.visibility;
+  await file.update({ title: trimmedTitle, description, visibility: nextVisibility });
+
+  if (nextVisibility === 'private') {
+    const usernames = (req.body.allowedUsernames || '')
+      .split(',')
+      .map((u) => u.trim())
+      .filter(Boolean);
+    const allowedUsers = usernames.length ? await User.findAll({ where: { username: { [Op.in]: usernames } } }) : [];
+    await FileAccess.destroy({ where: { fileId: file.id } });
+    if (allowedUsers.length) {
+      await FileAccess.bulkCreate(allowedUsers.map((u) => ({ fileId: file.id, userId: u.id })), { ignoreDuplicates: true });
+    }
+  } else {
+    await FileAccess.destroy({ where: { fileId: file.id } });
+  }
+
+  res.redirect(`/files/${file.id}`);
 });
 
 router.get('/:id', async (req, res) => {
@@ -163,12 +250,22 @@ router.delete('/:id', async (req, res) => {
   if (file.ownerUserId !== req.session.user.id && req.session.user.role !== 'ADMIN') {
     return res.status(403).send('Forbidden');
   }
-  if (file.ownerUserId === req.session.user.id) {
-    const user = await User.findByPk(req.session.user.id);
-    await user.update({ storageUsedBytes: Number(user.storageUsedBytes) - Number(file.sizeBytes) });
-  }
-  file.destroy();
-  res.redirect('/files/mine');
+
+  await sequelize.transaction(async (t) => {
+    await Comment.destroy({ where: { fileId: file.id }, transaction: t });
+    await FileAccess.destroy({ where: { fileId: file.id }, transaction: t });
+
+    const owner = await User.findByPk(file.ownerUserId, { transaction: t });
+    if (owner) {
+      const nextUsage = Math.max(0, Number(owner.storageUsedBytes) - Number(file.sizeBytes));
+      await owner.update({ storageUsedBytes: nextUsage }, { transaction: t });
+    }
+
+    await file.destroy({ transaction: t });
+  });
+
+  const redirectPath = file.ownerUserId === req.session.user.id ? '/files/mine' : '/files';
+  res.redirect(redirectPath);
 });
 
 module.exports = router;

@@ -11,7 +11,7 @@
         <td><%= f.visibility %></td>
         <td><%= (f.sizeBytes/1024/1024).toFixed(2) %> MB</td>
         <td>
-          <form method="post" action="/admin/files/<%= f.id %>?_method=DELETE" class="inline">
+          <form method="post" action="/admin/files/<%= f.id %>?_method=DELETE" class="inline" data-confirm="Are you sure you want to delete '<%= f.title %>'? This will remove the file and its related data.">
             <input type="text" name="reason" placeholder="Reason (optional)" class="reason-input" />
             <button type="submit">Delete</button>
           </form>
